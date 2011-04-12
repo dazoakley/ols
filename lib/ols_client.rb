@@ -1,0 +1,3 @@
+module OlsClient
+  # Your code goes here...
+end
