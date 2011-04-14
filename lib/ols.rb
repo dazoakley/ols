@@ -5,7 +5,7 @@ require 'sequel'
 require 'mysql2'
 require 'json'
 
-module OlsClient
+module OLS
   
   OLS_DB = Sequel.connect({
     :adapter  => 'mysql2',
@@ -226,7 +226,7 @@ module OlsClient
             and subject_term.identifier = ?
         SQL
         
-        OlsClient::OLS_DB[ sql, node.term ].each do |row|
+        OLS::OLS_DB[ sql, node.term ].each do |row|
           parent           = OntologyTerm.new( row[:parent_identifier], row[:parent_term] )
           parent.root_term = true if row[:parent_is_root].to_i == 1
           parent << node
@@ -259,7 +259,7 @@ module OlsClient
             and object_term.identifier = ?
         SQL
         
-        OlsClient::OLS_DB[sql,node.term].each do |row|
+        OLS::OLS_DB[sql,node.term].each do |row|
           child = OntologyTerm.new( row[:child_identifier], row[:child_term] )
           child.leaf_node = true if row[:child_is_leaf].to_i == 1
           child.get_children( child, true ) if recursively and !child.is_leaf?
@@ -275,7 +275,7 @@ module OlsClient
     #
     # @return [OntologyTerm] A copy of the receiver node.
     def detached_copy
-      copy = OlsClient::OntologyTerm.new(@name, @content ? @content.clone : nil)
+      copy = OLS::OntologyTerm.new(@name, @content ? @content.clone : nil)
       copy.root_term = @root_term
       copy.leaf_node = @leaf_node
       return copy
@@ -286,7 +286,7 @@ module OlsClient
     # @param [OntologyTerm] tree The tree that is to be merged into self
     # @return [OntologyTerm] The merged tree
     def merge( tree )
-      unless tree.is_a?(OlsClient::OntologyTerm)
+      unless tree.is_a?(OLS::OntologyTerm)
         raise TypeError, "You can only merge in another OntologyTerm tree!"
       end
       
@@ -333,7 +333,7 @@ module OlsClient
           order by ontology.fully_loaded desc, ontology.load_date asc
         SQL
 
-        term_set = OlsClient::OLS_DB[ sql, @name ].all()
+        term_set = OLS::OLS_DB[ sql, @name ].all()
 
         if term_set.size == 0
           get_term_from_synonym
@@ -358,10 +358,10 @@ module OlsClient
           order by ontology.fully_loaded desc, ontology.load_date asc
         SQL
         
-        term_set = OlsClient::OLS_DB[ sql, @name ].all()
+        term_set = OLS::OLS_DB[ sql, @name ].all()
         
         if term_set.size == 0
-          raise OlsClient::OntologyTermNotFoundError, "Unable to find the term '#{@name}' in the OLS database."
+          raise OLS::OntologyTermNotFoundError, "Unable to find the term '#{@name}' in the OLS database."
         end
         
         subject      = term_set.first

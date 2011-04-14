@@ -1,7 +1,7 @@
 require 'test_helper'
 
-class OlsClientTest < Test::Unit::TestCase
-  include OlsClient
+class OLSTest < Test::Unit::TestCase
+  include OLS
   
   context "An OntologyTerm object" do
     setup do

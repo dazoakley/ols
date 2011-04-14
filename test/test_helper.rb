@@ -24,4 +24,4 @@ if /^1.9/ === RUBY_VERSION
 end
 
 require 'shoulda'
-require 'ols_client'
+require 'ols'

@@ -1,3 +1,3 @@
-module OlsClient
+module OLS
   VERSION = "0.0.1"
 end
