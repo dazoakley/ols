@@ -7,15 +7,37 @@ require 'json'
 
 module OLS
   
-  OLS_DB = Sequel.connect({
-    :adapter  => 'mysql2',
-    :encoding => 'utf8',
-    :database => 'htgt_ols',
-    :host     => '127.0.0.1',
-    :port     => 13306,
-    :user     => 'htgt',
-    :password => 'htgt'
-  })
+  class << self
+    attr_accessor :db_connection_details
+    
+    def ols_db
+      @ols_db = connect_to_db() if @ols_db.nil?
+      @ols_db
+    end
+    
+    private
+      
+      def get_db_connection_details
+        defaults = {
+          :database => 'ols',
+          :host     => '127.0.0.1',
+          :port     => 3306,
+          :user     => 'ols',
+          :password => 'ols'
+        }
+        
+        if !OLS.db_connection_details.nil? and OLS.db_connection_details.is_a? Hash
+          defaults.merge!(OLS.db_connection_details)
+        end
+        
+        defaults
+      end
+      
+      def connect_to_db
+        params = { :adapter => 'mysql2', :encoding => 'utf8' }.merge(get_db_connection_details)
+        Sequel.connect(params)
+      end
+  end
   
   # Error class for when we can't find a given ontology term.
   class OntologyTermNotFoundError < StandardError; end
@@ -226,7 +248,7 @@ module OLS
             and subject_term.identifier = ?
         SQL
         
-        OLS::OLS_DB[ sql, node.term ].each do |row|
+        OLS.ols_db[ sql, node.term ].each do |row|
           parent           = OntologyTerm.new( row[:parent_identifier], row[:parent_term] )
           parent.root_term = true if row[:parent_is_root].to_i == 1
           parent << node
@@ -259,7 +281,7 @@ module OLS
             and object_term.identifier = ?
         SQL
         
-        OLS::OLS_DB[sql,node.term].each do |row|
+        OLS.ols_db[sql,node.term].each do |row|
           child = OntologyTerm.new( row[:child_identifier], row[:child_term] )
           child.leaf_node = true if row[:child_is_leaf].to_i == 1
           child.get_children( child, true ) if recursively and !child.is_leaf?
@@ -333,7 +355,7 @@ module OLS
           order by ontology.fully_loaded desc, ontology.load_date asc
         SQL
 
-        term_set = OLS::OLS_DB[ sql, @name ].all()
+        term_set = OLS.ols_db[ sql, @name ].all()
 
         if term_set.size == 0
           get_term_from_synonym
@@ -358,7 +380,7 @@ module OLS
           order by ontology.fully_loaded desc, ontology.load_date asc
         SQL
         
-        term_set = OLS::OLS_DB[ sql, @name ].all()
+        term_set = OLS.ols_db[ sql, @name ].all()
         
         if term_set.size == 0
           raise OLS::OntologyTermNotFoundError, "Unable to find the term '#{@name}' in the OLS database."
