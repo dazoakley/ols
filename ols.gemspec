@@ -9,8 +9,16 @@ Gem::Specification.new do |s|
   s.authors     = ["Darren Oakley"]
   s.email       = ["daz.oakley@gmail.com"]
   s.homepage    = "https://github.com/dazoakley/ols"
-  s.summary     = %q{}
-  s.description = %q{}
+  s.summary     = %q{A simple wrapper around a local copy of the OLS database}
+  s.description = %q{
+    OLS provides a simple interface to the EBI's Ontology Lookup Service (http://www.ebi.ac.uk/ontology-lookup/).  
+    It provides an easy lookup of ontology terms and automagically builds up ontology trees using RubyTree 
+    (http://rubytree.rubyforge.org/) as a base library.
+
+    PLEASE NOTE: The current version of this gem requires a local install of the OLS database running on MySQL.  
+    Please see http://www.ebi.ac.uk/ontology-lookup/databaseExport.do  I will update the code in the future 
+    to run off the soap service.
+  }
 
   s.rubyforge_project = "ols"
 

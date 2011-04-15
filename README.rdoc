@@ -1,0 +1,117 @@
+= OLS
+
+http://github.com/dazoakley/ols
+
+OLS provides a simple interface to the EBI's Ontology Lookup Service (http://www.ebi.ac.uk/ontology-lookup/).  
+It provides an easy lookup of ontology terms and automagically builds up ontology trees using RubyTree 
+(http://rubytree.rubyforge.org/) as a base library.
+
+<b>PLEASE NOTE</b>: The current version of this gem requires a local install of the OLS database running on MySQL.  
+Please see http://www.ebi.ac.uk/ontology-lookup/databaseExport.do  I will update the code in the future 
+to run off the soap service.
+
+== Install
+
+  gem install ols
+
+== Usage
+
+Include the module in your code:
+  
+  require 'rubygems'
+  require 'ols'
+  
+Then, to lookup an ontology term:
+  
+  ont = OLS::OntologyTerm.new('EMAP:3018')
+  
+This will create a simple tree object for the EMAP term EMAP:3018
+  
+  ont.name          # => "EMAP:3018"
+  ont.term          # => "EMAP:3018"
+  
+  ont.content       # => "TS18,nose"
+  ont.term_name     # => "TS18,nose"
+
+Find out about your ontology term
+  
+  ont.is_root?      # => false
+  ont.is_leaf?      # => false
+  
+<b>NOTE</b>: OntologyTerm's are lazily loaded, so upon initial build the OntologyTerm is just a single node in a 
+tree - no parents, no children.  See here (note the "Total Nodes Loaded" count):
+  
+  ont.to_s          # => "Term: EMAP:3018 Term Name: TS18,nose Root Term?: false Leaf Node?: false  Total Nodes Loaded: 1"
+  
+The tree for the term is built up (parents) and down (children) as it is requested:
+  
+  ont.parentage     # => Array of all parent terms (these will be loaded into the tree now)
+  ont.children      # => Array of all direct child terms (these will also be loaded into the tree now)
+  ont.to_s          # => "Term: EMAP:3018 Term Name: TS18,nose Root Term?: false Leaf Node?: false  Total Nodes Loaded: 4"
+  
+Alternatively, if you want to force load the tree:
+  
+  ont.buld_tree     # => Will load both parents and children into the tree
+  
+Find out more about your tree:
+  
+  ont.root                # => Gives you the root node - in this case: "EMAP:0"
+  ont.all_child_terms     # => An array of all child ontology terms
+  ont.all_child_name      # => An array of all child ontology term names
+  
+For more information on general usage, take a look in the test suite.  Also, OLS::OntologyTerm is a child object of 
+Tree::TreeNode (from the rubytree gem - http://rubytree.rubyforge.org/) and as such inherits all of its methods.
+
+== Database Connection Details
+
+The default database connection details are:
+
+  {
+    :database => 'ols',
+    :host     => '127.0.0.1',
+    :port     => 3306,
+    :user     => 'ols',
+    :password => 'ols'
+  }
+
+If your local copy of the OLS database requires different details, simply do the following once in your code 
+(substituting in your connection details) before any calls to OLS::OntologyTerm are made:
+
+  OLS.db_connection_details = {
+    :database => 'my_ols',
+    :host     => 'ols.example.com',
+    :port     => 3307,
+    :user     => 'user1',
+    :password => 'pass1'
+  }
+
+== Meta
+
+Written by Darren Oakley (daz dot oakley at gmail dot com)
+
+http://github.com/dazoakley/ols
+
+== License
+
+(The MIT License)
+
+Copyright (c) 2011 Darren Oakley
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+'Software'), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
