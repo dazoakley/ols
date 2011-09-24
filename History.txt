@@ -1,3 +1,9 @@
+=== 0.1.0 ....
+
+* Total rewrite...
+  * Switch to using the OLS SOAP service
+  * Remove the use of RubyTree as not all ontologies are trees
+
 === 0.0.1 2011-04-15
 
 * Initial release:

@@ -26,9 +26,3 @@ end
 require 'shoulda'
 require 'ols'
 
-OLS.db_connection_details = {
-  :port     => 13306,
-  :database => 'htgt_ols',
-  :user     => 'htgt',
-  :password => 'htgt'
-}

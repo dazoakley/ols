@@ -9,15 +9,10 @@ Gem::Specification.new do |s|
   s.authors     = ["Darren Oakley"]
   s.email       = ["daz.oakley@gmail.com"]
   s.homepage    = "https://github.com/dazoakley/ols"
-  s.summary     = %q{A simple wrapper around a local copy of the OLS database}
+  s.summary     = %q{A simple wrapper around the EBI's Ontology Lookup Service (OLS)}
   s.description = %q{
-    OLS provides a simple interface to the EBI's Ontology Lookup Service (http://www.ebi.ac.uk/ontology-lookup/).  
-    It provides an easy lookup of ontology terms and automagically builds up ontology trees using RubyTree 
-    (http://rubytree.rubyforge.org/) as a base library.
-
-    PLEASE NOTE: The current version of this gem requires a local install of the OLS database running on MySQL.  
-    Please see http://www.ebi.ac.uk/ontology-lookup/databaseExport.do  I will update the code in the future 
-    to run off the soap service.
+    OLS provides a simple interface to the EBI's Ontology Lookup Service (http://www.ebi.ac.uk/ontology-lookup/).
+    It provides an easy lookup of ontology terms and automagically builds up ontology trees for you.
   }
 
   s.rubyforge_project = "ols"
@@ -27,10 +22,7 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
   
-  s.add_dependency "rubytree"
-  s.add_dependency "sequel"
-  s.add_dependency "mysql2"
-  s.add_dependency "json"
+  s.add_dependency "savon"
   
   s.add_development_dependency "rake"
   s.add_development_dependency "shoulda"
