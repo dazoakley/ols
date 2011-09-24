@@ -45,5 +45,4 @@ module OLS
       response.body[:"#{method}_response"][:"#{method}_return"]
     end
   end
-
 end
