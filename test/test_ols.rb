@@ -27,6 +27,18 @@ class OLSTest < Test::Unit::TestCase
       assert_equal 'EMAP:0', emap_root.id
       assert_equal 'Mouse_anatomy_by_time_xproduct', emap_root.name
       assert emap_root.parents.empty?
+
+      assert_equal 3, OLS.root_terms('GO').size
+    end
+
+    should 'find terms by id' do
+      emap_0 = OLS.find_by_id('EMAP:0')
+      assert emap_0.is_a? OLS::Term
+      assert_equal 'Mouse_anatomy_by_time_xproduct', emap_0.name
+
+      assert_raise(OLS::TermNotFoundError) {
+        OLS.find_by_id('MP:WIBBLE')
+      }
     end
   end
 end
