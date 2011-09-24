@@ -17,6 +17,16 @@ module OLS
       @client
     end
 
+    def request(method,&block)
+      response = nil
+      if block
+        response = self.client.request(method,&block)
+      else
+        response = self.client.request method
+      end
+      response.body[:"#{method}_response"][:"#{method}_return"]
+    end
+
     def version
       request :get_version
     end
@@ -54,27 +64,17 @@ module OLS
       OLS::Term.new(id,name)
     end
 
-    def find_by_name(name)
-      id = request(:get_terms_by_name) { soap.body = { :termName => name } }
-      ap id
-    end
-
     private
 
     def setup_soap_client
+      Savon.configure do |config|
+        config.log = false            # disable logging
+        config.log_level = :info      # changing the log level
+      end
+
       Savon::Client.new do
         wsdl.document = "http://www.ebi.ac.uk/ontology-lookup/OntologyQuery.wsdl"
       end
-    end
-
-    def request(method,&block)
-      response = nil
-      if block
-        response = self.client.request(method,&block)
-      else
-        response = self.client.request method
-      end
-      response.body[:"#{method}_response"][:"#{method}_return"]
     end
   end
 end
