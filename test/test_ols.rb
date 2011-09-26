@@ -27,7 +27,6 @@ class OLSTest < Test::Unit::TestCase
       assert_equal 'EMAP:0', emap_root.id
       assert_equal 'Mouse_anatomy_by_time_xproduct', emap_root.name
       assert emap_root.parents.empty?
-
       assert_equal 3, OLS.root_terms('GO').size
     end
 
@@ -35,10 +34,14 @@ class OLSTest < Test::Unit::TestCase
       emap_0 = OLS.find_by_id('EMAP:0')
       assert emap_0.is_a? OLS::Term
       assert_equal 'Mouse_anatomy_by_time_xproduct', emap_0.name
+      assert_raise(OLS::TermNotFoundError) { OLS.find_by_id('MP:WIBBLE') }
+    end
 
-      assert_raise(OLS::TermNotFoundError) {
-        OLS.find_by_id('MP:WIBBLE')
-      }
+    should 'be able to find terms from synonyms' do
+      term = OLS.find_by_id('GO:0007242')
+      assert term.is_a? OLS::Term
+      assert_equal 'GO:0023034', term.id
+      assert_equal 'intracellular signaling pathway', term.name
     end
   end
 end
