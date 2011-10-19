@@ -2,6 +2,14 @@ require 'test_helper'
 
 class OLSTermTest < Test::Unit::TestCase
   context 'An OLS::Term object' do
+    setup do
+      VCR.insert_cassette('test_ols_term')
+    end
+
+    teardown do
+      VCR.eject_cassette
+    end
+
     context 'once created' do
       setup do
         @term = OLS.find_by_id('EMAP:3018')

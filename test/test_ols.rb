@@ -2,6 +2,14 @@ require 'test_helper'
 
 class OLSTest < Test::Unit::TestCase
   context 'The OLS module' do
+    setup do
+      VCR.insert_cassette('test_ols')
+    end
+
+    teardown do
+      VCR.eject_cassette
+    end
+
     should 'make a connection to the OLS SOAP service' do
       assert OLS.client
       assert OLS.client.is_a? Savon::Client

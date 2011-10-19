@@ -24,5 +24,23 @@ if /^1.9/ === RUBY_VERSION
 end
 
 require 'shoulda'
+require 'vcr'
 require 'ols'
 
+# Set-up VCR for mocking up web requests.
+VCR.config do |c|
+  if /^1\.8/ === RUBY_VERSION
+    c.cassette_library_dir = 'test/vcr_cassettes_ruby1.8'
+  elsif RUBY_VERSION == "1.9.1"
+    c.cassette_library_dir = 'test/vcr_cassettes_ruby1.9.1'
+  else
+    c.cassette_library_dir = 'test/vcr_cassettes_ruby1.9.2+'
+  end
+  
+  c.stub_with                :webmock
+  c.ignore_localhost         = true
+  c.default_cassette_options = { 
+    :record            => :new_episodes, 
+    :match_requests_on => [:uri, :method, :body]
+  }
+end
