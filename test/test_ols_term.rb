@@ -79,16 +79,16 @@ class OLSTermTest < Test::Unit::TestCase
       end
 
       should "be able to say if it's a root/leaf node" do
-        assert_false @term.is_root?
-        assert_false @term.is_leaf?
+        assert_equal false, @term.is_root?
+        assert_equal false, @term.is_leaf?
 
         emap3032 = OLS.find_by_id('EMAP:3032')
-        assert_false emap3032.is_root?
+        assert_equal false, emap3032.is_root?
         assert emap3032.is_leaf?
 
         emap0 = OLS.find_by_id('EMAP:0')
         assert emap0.is_root?
-        assert_false emap0.is_leaf?
+        assert_equal false, emap0.is_leaf?
       end
     end
   end

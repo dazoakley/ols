@@ -1,9 +1,17 @@
 # encoding: utf-8
 
 module OLS
+  
+  # Class representing an ontology term
+  #
+  # @author Darren Oakley
   class Term
     attr_reader :id, :name
 
+    # Creates a new OLS::Term object
+    #
+    # @param [String] id The ontology term id
+    # @param [String] name The ontology term name
     def initialize(id,name)
       @id = id
       @name = name
@@ -12,6 +20,44 @@ module OLS
       @already_fetched_children = false
     end
 
+    # The ontology term 'id'
+    #
+    # @return [String] The ontology term id
+    def term
+      @id
+    end
+
+    # The ontology term 'name'
+    #
+    # @return [String] The ontology term name
+    def term_name
+      @name
+    end
+
+    # Is this a root node?
+    #
+    # @return [Boolean] returns true/false depending if this is a root node or not...
+    def is_root?
+      self.parents.empty?
+    end
+
+    # Is this a leaf node?
+    #
+    # @return [Boolean] returns true/false depending if this is a leaf node or not...
+    def is_leaf?
+      self.children.empty?
+    end
+
+    # Represent an OLS::Term as a String
+    #
+    # @return [String] A string representation of an OLS::Term
+    def to_s
+      "#{@id} - #{@name}"
+    end
+
+    # Returns the parent terms for this ontology term
+    #
+    # @return [Array] An array of OLS::Term objects
     def parents
       unless @already_fetched_parents
         @parents = []
@@ -31,16 +77,13 @@ module OLS
       @parents
     end
 
+    # Returns the child terms for this ontology term
+    #
+    # @return [Array] An array of child OLS::Term objects
     def children
       unless @already_fetched_children
         @children = []
-        response = OLS.request(:get_term_children) {
-          soap.body = {
-            :termId => self.id,
-            :distance => 1,
-            :relationTypes => [2]
-          }
-        }
+        response = OLS.request(:get_term_children) { soap.body = { :termId => self.id, :distance => 1, :relationTypes => [1,2,3,4,5] } }
         unless response.nil?
           if response[:item].is_a? Array
             response[:item].each { |term| @children.push( OLS::Term.new(term[:key],term[:value]) ) }
@@ -49,7 +92,10 @@ module OLS
             @children.push( OLS::Term.new(term[:key],term[:value]) )
           end
         end
+
+        @already_fetched_children = true
       end
+
       @children
     end
   end

@@ -51,6 +51,13 @@ class OLSTest < Test::Unit::TestCase
       assert_equal 'GO:0023034', term.id
       assert_equal 'intracellular signaling pathway', term.name
     end
+
+    # should 'be able to find terms by name' do
+    #   terms = OLS.find_by_name('mitochondrion','GO')
+    #   assert terms.first.is_a? OLS::Term
+    #   assert terms.size > 2
+    #   assert terms.delete_if { |elm| elm.name =~ /mitochondrion/ }.size == 0
+    # end
   end
 end
 
