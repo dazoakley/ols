@@ -18,20 +18,49 @@ module OLS
 
       @already_fetched_parents  = false
       @already_fetched_children = false
+      @already_fetched_metadata = false
     end
 
     # Is this a root node?
     #
-    # @return [Boolean] returns true/false depending if this is a root node or not...
+    # @return [Boolean] returns true/false depending on if this is a root node or not...
     def is_root?
       self.parents.empty?
     end
 
     # Is this a leaf node?
     #
-    # @return [Boolean] returns true/false depending if this is a leaf node or not...
+    # @return [Boolean] returns true/false depending on if this is a leaf node or not...
     def is_leaf?
       self.children.empty?
+    end
+
+    # Is this ontology term obsolete?
+    #
+    # @return [Boolean] returns true/false depending on if this term is obsolete or not...
+    def is_obsolete?
+      @is_obsolete ||= OLS.request(:is_obsolete) { soap.body = { :termId => self.term_id } }
+    end
+
+    # def xrefs
+    #   OLS.request(:get_term_xrefs) { soap.body = { :termId => self.term_id } }
+    # end
+
+    # The ontology term definition
+    #
+    # @return [String] The ontology term definition
+    def definition
+      get_term_metadata
+      @definition
+    end
+
+    # Returns a hash listing the different types of synonyms known for this term,
+    # keyed by the synonym type
+    #
+    # @return [Hash] a hash listing the different types of synonyms known for this term
+    def synonyms
+      get_term_metadata
+      @synonyms
     end
 
     # Represent an OLS::Term as a String
@@ -160,6 +189,27 @@ module OLS
 
     alias :all_child_term_ids :all_child_ids
     alias :all_child_term_names :all_child_names
+
+    private
+
+    def get_term_metadata
+      unless @already_fetched_metadata
+        meta = [ OLS.request(:get_term_metadata) { soap.body = { :termId => self.term_id } }[:item] ].flatten
+        meta.each do |meta_item|
+          case meta_item[:key]
+          when 'definition'
+            @definition = meta_item[:value]
+          when /synonym/
+            syn_match = /^(.+)_synonym/.match( meta_item[:key] )
+            @synonyms ||= {}
+            @synonyms[ syn_match[1].to_sym ] ||= []
+            @synonyms[ syn_match[1].to_sym ] << meta_item[:value]
+          end
+        end
+
+        @already_fetched_metadata = true
+      end
+    end
 
   end
 end

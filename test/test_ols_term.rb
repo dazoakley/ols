@@ -24,9 +24,48 @@ class OLSTermTest < Test::Unit::TestCase
         assert_equal 'EMAP:3018 - TS18,nose', @term.to_s
       end
 
+      should 'be able to say if it is an obsolete term' do
+        assert_equal false, @term.is_obsolete?
+        assert_equal false, OLS.find_by_id('GO:0007242').is_obsolete?
+        assert OLS.find_by_id('GO:0008945').is_obsolete?
+      end
+
+      should 'be able to give its definition' do
+        assert_nil @term.definition
+
+        go_term = OLS.find_by_id('GO:0007242')
+        assert_equal 'intracellular signal transduction', go_term.term_name
+        assert_equal(
+          'The process in which a signal is passed on to downstream components within '+\
+          'the cell, which become activated themselves to further propagate the signal '+\
+          'and finally trigger a change in the function or state of the cell.',
+          go_term.definition
+        )
+      end
+
+      should 'be able to give a terms synonyms' do
+        go_term = OLS.find_by_id('GO:0007242')
+
+        assert_equal 'intracellular signal transduction', go_term.term_name
+
+        assert go_term.synonyms.keys.include? :exact
+        assert go_term.synonyms[:exact].include? 'intracellular signaling chain'
+
+        assert go_term.synonyms.keys.include? :related
+        assert go_term.synonyms[:related].include? 'intracellular signaling pathway'
+
+        assert go_term.synonyms.keys.include? :narrow
+        assert go_term.synonyms[:narrow].include? 'signal transmission via intracellular cascade'
+
+        assert go_term.synonyms.keys.include? :alt_id
+        assert go_term.synonyms[:alt_id].include? 'GO:0023013'
+      end
+
       should 'be able to report its parents' do
         assert_equal 1, @term.parents.size
         assert_equal 'EMAP:2987', @term.parents.first.term_id
+        
+        # TODO: find a term with more than 1 parent!!!
       end
 
       should 'be able to generate a flat list of ALL parents (up the ontology)' do

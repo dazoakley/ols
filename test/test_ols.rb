@@ -45,13 +45,12 @@ class OLSTest < Test::Unit::TestCase
       assert_raise(OLS::TermNotFoundError) { OLS.find_by_id('MP:WIBBLE') }
     end
 
-    should 'be able to find terms from synonyms' do
-      skip('synonym finding is not ready...')
-      term = OLS.find_by_id('GO:0007242')
-      assert term.is_a? OLS::Term
-      assert_equal 'GO:0023034', term.term_id
-      assert_equal 'intracellular signaling pathway', term.term_name
-    end
+    # should 'be able to find terms from synonyms' do
+    #   term = OLS.find_by_id('GO:0007242')
+    #   assert term.is_a? OLS::Term
+    #   assert_equal 'GO:0023034', term.term_id
+    #   assert_equal 'intracellular signaling pathway', term.term_name
+    # end
 
     # should 'be able to find terms by name' do
     #   terms = OLS.find_by_name('mitochondrion','GO')
