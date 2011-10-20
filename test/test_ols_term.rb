@@ -39,7 +39,7 @@ class OLSTermTest < Test::Unit::TestCase
 
       should 'be able to generate a flat list of ALL parent terms/names' do
         assert @term.all_parent_ids.is_a? Array
-        assert @term.all_parent_terms.is_a? Array
+        assert @term.all_parent_names.is_a? Array
         assert_equal 4, @term.all_parent_ids.size
         assert_equal 'EMAP:0', @term.all_parent_ids.first
 
