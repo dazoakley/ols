@@ -8,14 +8,14 @@ if /^1.9/ === RUBY_VERSION
   begin
     require 'simplecov'
     require 'simplecov-rcov'
-    
+
     class SimpleCov::Formatter::MergedFormatter
       def format(result)
          SimpleCov::Formatter::HTMLFormatter.new.format(result)
          SimpleCov::Formatter::RcovFormatter.new.format(result)
       end
     end
-    
+
     SimpleCov.formatter = SimpleCov::Formatter::MergedFormatter
     SimpleCov.start
   rescue LoadError
@@ -36,7 +36,7 @@ VCR.config do |c|
   else
     c.cassette_library_dir = 'test/vcr_cassettes_ruby1.9.2+'
   end
-  
+
   c.stub_with                :webmock
   c.ignore_localhost         = true
   c.default_cassette_options = { 
