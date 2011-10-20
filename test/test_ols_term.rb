@@ -16,9 +16,7 @@ class OLSTermTest < Test::Unit::TestCase
       end
 
       should 'have an id/term and a name' do
-        assert_equal 'EMAP:3018', @term.id
-        assert_equal 'EMAP:3018', @term.term
-        assert_equal 'TS18,nose', @term.name
+        assert_equal 'EMAP:3018', @term.term_id
         assert_equal 'TS18,nose', @term.term_name
       end
 
@@ -28,19 +26,18 @@ class OLSTermTest < Test::Unit::TestCase
 
       should 'be able to report its parents' do
         assert_equal 1, @term.parents.size
-        assert_equal 'EMAP:2987', @term.parents.first.id
+        assert_equal 'EMAP:2987', @term.parents.first.term_id
       end
 
       should 'be able to generate a flat list of ALL parents (up the ontology)' do
         assert @term.all_parents.is_a? Array
         assert @term.all_parents.first.is_a? OLS::Term
         assert_equal 4, @term.all_parents.size
-        assert_equal 'EMAP:0', @term.all_parents.first.id
+        assert_equal 'EMAP:0', @term.all_parents.first.term_id
       end
 
       should 'be able to generate a flat list of ALL parent terms/names' do
         assert @term.all_parent_ids.is_a? Array
-        assert @term.all_parent_terms.is_a? Array
         assert_equal 4, @term.all_parent_ids.size
         assert_equal 'EMAP:0', @term.all_parent_ids.first
 
@@ -53,7 +50,7 @@ class OLSTermTest < Test::Unit::TestCase
         assert_equal 3, @term.children.size
         emap3022_included = false
         @term.children.each do |child|
-          emap3022_included = true if child.id.eql?('EMAP:3022')
+          emap3022_included = true if child.term_id.eql?('EMAP:3022')
         end
         assert emap3022_included
       end
@@ -64,13 +61,12 @@ class OLSTermTest < Test::Unit::TestCase
         assert_equal 14, @term.all_children.size
         emap3032_included = false
         @term.all_children.each do |child|
-          emap3032_included = true if child.id.eql?('EMAP:3032')
+          emap3032_included = true if child.term_id.eql?('EMAP:3032')
         end
       end
 
       should 'be able to generate a flat list of ALL child terms/names' do
         assert @term.all_child_ids.is_a? Array
-        assert @term.all_child_terms.is_a? Array
         assert_equal 14, @term.all_child_ids.size
         assert @term.all_child_ids.include?('EMAP:3032')
 

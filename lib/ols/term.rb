@@ -6,32 +6,18 @@ module OLS
   #
   # @author Darren Oakley
   class Term
-    attr_reader :id, :name
+    attr_reader :term_id, :term_name
 
     # Creates a new OLS::Term object
     #
-    # @param [String] id The ontology term id
-    # @param [String] name The ontology term name
-    def initialize(id,name)
-      @id = id
-      @name = name
+    # @param [String] term_id The ontology term id
+    # @param [String] term_name The ontology term name
+    def initialize(term_id,term_name)
+      @term_id = term_id
+      @term_name = term_name
 
       @already_fetched_parents  = false
       @already_fetched_children = false
-    end
-
-    # The ontology term 'id'
-    #
-    # @return [String] The ontology term id
-    def term
-      @id
-    end
-
-    # The ontology term 'name'
-    #
-    # @return [String] The ontology term name
-    def term_name
-      @name
     end
 
     # Is this a root node?
@@ -52,7 +38,7 @@ module OLS
     #
     # @return [String] A string representation of an OLS::Term
     def to_s
-      "#{@id} - #{@name}"
+      "#{@term_id} - #{@term_name}"
     end
 
     # Returns the direct parent terms for this ontology term
@@ -60,7 +46,7 @@ module OLS
     # @return [Array] An array of OLS::Term objects
     def parents
       unless @already_fetched_parents
-        response = OLS.request(:get_term_parents) { soap.body = { :termId => self.id } }
+        response = OLS.request(:get_term_parents) { soap.body = { :termId => self.term_id } }
         unless response.nil?
           if response[:item].is_a? Array
             @parents = response[:item].map { |term| OLS::Term.new(term[:key],term[:value]) }
@@ -94,46 +80,46 @@ module OLS
       parentage_array.reverse.flatten
     end
 
-    # Returns an array of all parent term ids for this ontology term
+    # Returns an array of all parent term_ids for this ontology term
     # (all the way to the top of the ontology).  The array is ordered
     # with the root term first and the most direct parent last.
     #
-    # @return [Array] An array of ontology term ids
+    # @return [Array] An array of ontology term_ids
     def all_parent_ids
-      all_parents.map(&:id)
+      all_parents.map(&:term_id)
     end
 
-    # Returns an array of all parent term names for this ontology term
+    # Returns an array of all parent term_names for this ontology term
     # (all the way to the top of the ontology).  The array is ordered
     # with the root term first and the most direct parent last.
     #
-    # @return [Array] An array of ontology term names
+    # @return [Array] An array of ontology term_names
     def all_parent_names
-      all_parents.map(&:name)
+      all_parents.map(&:term_name)
     end
 
-    alias :all_parent_terms :all_parent_names
+    alias :all_parent_term_ids :all_parent_ids
+    alias :all_parent_term_names :all_parent_names
 
     # Returns the child terms for this ontology term
     #
     # @return [Array] An array of child OLS::Term objects
     def children
       unless @already_fetched_children
-        @children = []
-        response = OLS.request(:get_term_children) { soap.body = { :termId => self.id, :distance => 1, :relationTypes => [1,2,3,4,5] } }
+        response = OLS.request(:get_term_children) { soap.body = { :termId => self.term_id, :distance => 1, :relationTypes => [1,2,3,4,5] } }
         unless response.nil?
           if response[:item].is_a? Array
-            response[:item].each { |term| @children.push( OLS::Term.new(term[:key],term[:value]) ) }
+            @children = response[:item].map { |term| OLS::Term.new(term[:key],term[:value]) }
           else
             term = response[:item]
-            @children.push( OLS::Term.new(term[:key],term[:value]) )
+            @children = OLS::Term.new(term[:key],term[:value])
           end
         end
 
         @already_fetched_children = true
       end
 
-      @children
+      @children ||= []
     end
 
     # Returns an array of all child term objects for this ontology term
@@ -154,25 +140,26 @@ module OLS
       children_array.flatten
     end
 
-    # Returns an array of all child term ids for this ontology term
+    # Returns an array of all child term_ids for this ontology term
     # (all the way down to the bottom of the ontology).  The array is NOT
     # guarenteed to come out in any specific order whatsoever.
     #
-    # @return [Array] An array of ontology term ids
+    # @return [Array] An array of ontology term_ids
     def all_child_ids
-      all_children.map(&:id)
+      all_children.map(&:term_id)
     end
 
-    # Returns an array of all child term names for this ontology term
+    # Returns an array of all child term_names for this ontology term
     # (all the way down to the bottom of the ontology).  The array is NOT
     # guarenteed to come out in any specific order whatsoever.
     #
-    # @return [Array] An array of ontology term names
+    # @return [Array] An array of ontology term_names
     def all_child_names
-      all_children.map(&:name)
+      all_children.map(&:term_name)
     end
 
-    alias :all_child_terms :all_child_names
+    alias :all_child_term_ids :all_child_ids
+    alias :all_child_term_names :all_child_names
 
   end
 end

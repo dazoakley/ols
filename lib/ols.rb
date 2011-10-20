@@ -80,13 +80,13 @@ module OLS
 
     # Fetch an ontology term (OLS::Term) by its id
     #
-    # @param [String/Symbol] id An ontology id to look for - i.e. 'GO:0023034'
+    # @param [String/Symbol] term_id An ontology id to look for - i.e. 'GO:0023034'
     # @return [OLS::Term] An OLS::Term object for the requested ontology id
     # @raise OLS::TermNotFoundError Raised if the requested ontology id cannot be found
-    def find_by_id(id)
-      name = request(:get_term_by_id) { soap.body = { :termId => id } }
-      raise TermNotFoundError if name.eql?(id)
-      OLS::Term.new(id,name)
+    def find_by_id(term_id)
+      term_name = request(:get_term_by_id) { soap.body = { :termId => term_id } }
+      raise TermNotFoundError if term_name.eql?(term_id)
+      OLS::Term.new(term_id,term_name)
     end
 
     # Sets whether to log HTTP requests.

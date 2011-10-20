@@ -32,8 +32,8 @@ class OLSTest < Test::Unit::TestCase
 
       assert emap_roots.is_a? Array
       assert emap_root.is_a? OLS::Term
-      assert_equal 'EMAP:0', emap_root.id
-      assert_equal 'Mouse_anatomy_by_time_xproduct', emap_root.name
+      assert_equal 'EMAP:0', emap_root.term_id
+      assert_equal 'Mouse_anatomy_by_time_xproduct', emap_root.term_name
       assert emap_root.parents.empty?
       assert_equal 3, OLS.root_terms('GO').size
     end
@@ -41,7 +41,7 @@ class OLSTest < Test::Unit::TestCase
     should 'find terms by id' do
       emap_0 = OLS.find_by_id('EMAP:0')
       assert emap_0.is_a? OLS::Term
-      assert_equal 'Mouse_anatomy_by_time_xproduct', emap_0.name
+      assert_equal 'Mouse_anatomy_by_time_xproduct', emap_0.term_name
       assert_raise(OLS::TermNotFoundError) { OLS.find_by_id('MP:WIBBLE') }
     end
 
@@ -49,15 +49,15 @@ class OLSTest < Test::Unit::TestCase
       skip('synonym finding is not ready...')
       term = OLS.find_by_id('GO:0007242')
       assert term.is_a? OLS::Term
-      assert_equal 'GO:0023034', term.id
-      assert_equal 'intracellular signaling pathway', term.name
+      assert_equal 'GO:0023034', term.term_id
+      assert_equal 'intracellular signaling pathway', term.term_name
     end
 
     # should 'be able to find terms by name' do
     #   terms = OLS.find_by_name('mitochondrion','GO')
     #   assert terms.first.is_a? OLS::Term
     #   assert terms.size > 2
-    #   assert terms.delete_if { |elm| elm.name =~ /mitochondrion/ }.size == 0
+    #   assert terms.delete_if { |elm| elm.term_name =~ /mitochondrion/ }.size == 0
     # end
   end
 end
