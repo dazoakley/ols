@@ -4,3 +4,4 @@
 Gemfile.lock
 pkg/*
 coverage/*
+test/vcr_cassettes*
