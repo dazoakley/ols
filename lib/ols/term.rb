@@ -112,6 +112,8 @@ module OLS
       all_parents.map(&:name)
     end
 
+    alias :all_parent_terms :all_parent_names
+
     # Returns the child terms for this ontology term
     #
     # @return [Array] An array of child OLS::Term objects
@@ -133,5 +135,44 @@ module OLS
 
       @children
     end
+
+    # Returns an array of all child term objects for this ontology term
+    # (all the way down to the bottom of the ontology).  The array is NOT
+    # guarenteed to come out in any specific order whatsoever.
+    #
+    # @return [Array] An array of OLS::Term objects
+    def all_children
+      return [] if is_leaf?
+
+      children_array = []
+      prev_children = self.children
+      while ( !prev_children.empty? )
+        children_array << prev_children
+        prev_children = prev_children.map(&:children).flatten
+      end
+
+      children_array.flatten
+    end
+
+    # Returns an array of all child term ids for this ontology term
+    # (all the way down to the bottom of the ontology).  The array is NOT
+    # guarenteed to come out in any specific order whatsoever.
+    #
+    # @return [Array] An array of ontology term ids
+    def all_child_ids
+      all_children.map(&:id)
+    end
+
+    # Returns an array of all child term names for this ontology term
+    # (all the way down to the bottom of the ontology).  The array is NOT
+    # guarenteed to come out in any specific order whatsoever.
+    #
+    # @return [Array] An array of ontology term names
+    def all_child_names
+      all_children.map(&:name)
+    end
+
+    alias :all_child_terms :all_child_names
+
   end
 end
