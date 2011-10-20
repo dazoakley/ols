@@ -1,7 +1,6 @@
 # encoding: utf-8
 
 require 'savon'
-require 'ap'
 
 # Simple wrapper for interacting with the OLS (Ontology Lookup Service - http://www.ebi.ac.uk/ontology-lookup/) 
 # database (created and managed by the EBI).
@@ -12,9 +11,28 @@ module OLS
   class TermNotFoundError < StandardError; end
 
   class << self
+    # Returns the raw (Savon) SOAP client for the OLS webservice
+    #
+    # @return [Object] The raw (Savon) SOAP client for the OLS webservice
     def client
       @client = setup_soap_client if @client.nil?
       @client
+    end
+
+    # Generic request method to allow simple access to all the
+    # OLS webservice end-points (provided by Savon)
+    #
+    # @param [String/Symbol] method The SOAP method to call
+    # @param [Block] &block An optional code-block to pass to the SOAP call
+    # @return [Hash] The OLS method call return
+    def request(method,&block)
+      response = nil
+      if block
+        response = self.client.request(method,&block)
+      else
+        response = self.client.request method
+      end
+      response.body[:"#{method}_response"][:"#{method}_return"]
     end
 
     # Fetch the version string for the current build of OLS
@@ -69,29 +87,16 @@ module OLS
       OLS::Term.new(id,name)
     end
 
-    # def find_by_name(partial_name,ontology)
-    #   terms = request(:get_terms_by_name) { soap.body = { :partialName => partial_name, :ontologyName => ontology, :reverseKeyOrder => false } }
-    #   ap terms
-    # end
-
-    def request(method,&block)
-      response = nil
-      if block
-        response = self.client.request(method,&block)
-      else
-        response = self.client.request method
-      end
-      response.body[:"#{method}_response"][:"#{method}_return"]
-    end
-
     private
 
     # Helper function to initialize the (Savon) SOAP client
     def setup_soap_client
       Savon.configure do |config|
-        config.log = false            # disable logging
-        config.log_level = :info      # changing the log level
+        config.log = false
+        # config.log_level = :debug
       end
+
+      HTTPI.log = false
 
       Savon::Client.new do
         wsdl.document = "http://www.ebi.ac.uk/ontology-lookup/OntologyQuery.wsdl"
