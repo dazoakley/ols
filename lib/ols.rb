@@ -10,6 +10,8 @@ module OLS
   # Error class for when we can't find a given ontology term.
   class TermNotFoundError < StandardError; end
 
+  DEFAULT_LOG_LEVEL = :warn
+
   class << self
     # Returns the raw (Savon) SOAP client for the OLS webservice
     #
@@ -87,16 +89,43 @@ module OLS
       OLS::Term.new(id,name)
     end
 
+    # Sets whether to log HTTP requests.
+    attr_writer :log
+
+    # Returns whether to log HTTP/SOAP requests. Defaults to +false+.
+    def log?
+      @log ? true : false
+    end
+
+    # Sets the logger to use.
+    attr_writer :logger
+
+    # Returns the logger. Defaults to an instance of +Logger+ writing to STDOUT.
+    def logger
+      @logger ||= ::Logger.new STDOUT
+    end
+
+    # Sets the log level.
+    attr_writer :log_level
+
+    # Returns the log level. Defaults to :warn.
+    def log_level
+      @log_level ||= DEFAULT_LOG_LEVEL
+    end
+
     private
 
     # Helper function to initialize the (Savon) SOAP client
     def setup_soap_client
       Savon.configure do |config|
-        config.log = false
-        # config.log_level = :debug
+        config.log = false unless OLS.log?
+        config.log_level = OLS.log_level
+        config.logger = OLS.logger
       end
 
-      HTTPI.log = false
+      HTTPI.log = false unless OLS.log?
+      HTTPI.log_level = OLS.log_level
+      HTTPI.logger = OLS.logger
 
       Savon::Client.new do
         wsdl.document = "http://www.ebi.ac.uk/ontology-lookup/OntologyQuery.wsdl"
