@@ -19,6 +19,7 @@ class OLSTermTest < Test::Unit::TestCase
         assert_equal 'EMAP:3018', @term.id
         assert_equal 'EMAP:3018', @term.term
         assert_equal 'TS18,nose', @term.name
+        assert_equal 'TS18,nose', @term.term_name
       end
 
       should 'be able to represent itself as a string' do

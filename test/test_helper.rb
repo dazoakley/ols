@@ -17,7 +17,9 @@ if /^1.9/ === RUBY_VERSION
     end
 
     SimpleCov.formatter = SimpleCov::Formatter::MergedFormatter
-    SimpleCov.start
+    SimpleCov.start do
+      add_filter "/test/"
+    end
   rescue LoadError
     puts "[ERROR] Unable to load 'simplecov' - please run 'bundle install'"
   end
