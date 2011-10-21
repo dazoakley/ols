@@ -140,6 +140,14 @@ class OLSTermTest < Test::Unit::TestCase
         assert @emap_term.all_child_names.include?('TS18,mesenchyme,medial-nasal process')
       end
 
+      should 'allow easy access to child terms using the [] helper' do
+        emap = OLS.find_by_id('EMAP:0')
+        assert emap['EMAP:2636'].is_a? OLS::Term
+        assert emap['EMAP:2636']['EMAP:2822'].is_a? OLS::Term
+        assert_equal 'EMAP:2636', emap['EMAP:2636'].term_id
+        assert_equal 'TS18,embryo', emap['EMAP:2636'].term_name
+      end
+
       should "be able to say if it's a root/leaf node" do
         assert_equal false, @emap_term.is_root?
         assert_equal false, @emap_term.is_leaf?

@@ -153,6 +153,18 @@ module OLS
       @children ||= []
     end
 
+    # Convenience method for accessing specific child terms.
+    #
+    # @param [String] term_id The term_id for the child you wish to access
+    # @return [OLS::Term] An OLS::Term object
+    def [](term_id)
+      children_as_a_hash = {}
+      self.children.each do |child|
+        children_as_a_hash[child.term_id] = child
+      end
+      children_as_a_hash[term_id]
+    end
+
     # Returns an array of all child term objects for this ontology term
     # (all the way down to the bottom of the ontology).  The array is NOT
     # guarenteed to come out in any specific order whatsoever.
