@@ -10,8 +10,6 @@ module OLS
   # Error class for when we can't find a given ontology term.
   class TermNotFoundError < StandardError; end
 
-  DEFAULT_LOG_LEVEL = :warn
-
   class << self
     # Returns the raw (Savon) SOAP client for the OLS webservice
     #
@@ -89,15 +87,17 @@ module OLS
       OLS::Term.new(term_id,term_name)
     end
 
-    # Sets whether to log HTTP requests.
+    # Set whether to log HTTP requests - pass in +true+ or +false+.
     attr_writer :log
 
     # Returns whether to log HTTP/SOAP requests. Defaults to +false+.
+    #
+    # @return [Boolean] To log or not to log, that is the question...
     def log?
       @log ? true : false
     end
 
-    # Sets the logger to use.
+    # Set the logger to use.
     attr_writer :logger
 
     # Returns the logger. Defaults to an instance of +Logger+ writing to STDOUT.
@@ -105,12 +105,12 @@ module OLS
       @logger ||= ::Logger.new STDOUT
     end
 
-    # Sets the log level.
+    # Set the log level.
     attr_writer :log_level
 
-    # Returns the log level. Defaults to :warn.
+    # Return the log level. Defaults to :warn.
     def log_level
-      @log_level ||= DEFAULT_LOG_LEVEL
+      @log_level ||= :warn
     end
 
     private
