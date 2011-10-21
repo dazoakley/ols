@@ -60,7 +60,7 @@ module OLS
     # @return [Hash] a hash listing the different types of synonyms known for this term
     def synonyms
       get_term_metadata
-      @synonyms
+      @synonyms ||= {}
     end
 
     # Represent an OLS::Term as a String
