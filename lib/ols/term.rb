@@ -93,7 +93,7 @@ module OLS
 
     # Returns an array of all parent term objects for this ontology term
     # (all the way to the top of the ontology).  The array is ordered
-    # with the root term first and the most direct parent last.
+    # with the root term first and the most direct parent(s) last.
     #
     # @return [Array] An array of OLS::Term objects
     def all_parents
@@ -111,20 +111,22 @@ module OLS
 
     # Returns an array of all parent term_ids for this ontology term
     # (all the way to the top of the ontology).  The array is ordered
-    # with the root term first and the most direct parent last.
+    # with the root term first and the most direct parent(s) last. 
+    # Duplicates are also filtered out.
     #
     # @return [Array] An array of ontology term_ids
     def all_parent_ids
-      all_parents.map(&:term_id)
+      all_parents.map(&:term_id).uniq
     end
 
     # Returns an array of all parent term_names for this ontology term
     # (all the way to the top of the ontology).  The array is ordered
     # with the root term first and the most direct parent last.
+    # Duplicates are also filtered out.
     #
     # @return [Array] An array of ontology term_names
     def all_parent_names
-      all_parents.map(&:term_name)
+      all_parents.map(&:term_name).uniq
     end
 
     alias :all_parent_term_ids :all_parent_ids
