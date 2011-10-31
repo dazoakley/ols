@@ -87,30 +87,38 @@ module OLS
       OLS::Term.new(term_id,term_name)
     end
 
-    # Set whether to log HTTP requests - pass in +true+ or +false+.
+    # Set whether to log HTTP requests - pass in +true+ or +false+
     attr_writer :log
 
-    # Returns whether to log HTTP/SOAP requests. Defaults to +false+.
+    # Returns whether to log HTTP/SOAP requests. Defaults to +false+
     #
     # @return [Boolean] To log or not to log, that is the question...
     def log?
       @log ? true : false
     end
 
-    # Set the logger to use.
+    # Set the logger to use
     attr_writer :logger
 
-    # Returns the logger. Defaults to an instance of +Logger+ writing to STDOUT.
+    # Returns the logger. Defaults to an instance of +Logger+ writing to STDOUT
     def logger
       @logger ||= ::Logger.new STDOUT
     end
 
-    # Set the log level.
+    # Set the log level
     attr_writer :log_level
 
-    # Return the log level. Defaults to :warn.
+    # Return the log level. Defaults to :warn
     def log_level
       @log_level ||= :warn
+    end
+
+    # Set a HTTP proxy to use
+    attr_writer :proxy
+
+    # Returns a HTTP proxy url.  Will read the +http_proxy+ environment variable if present
+    def proxy
+      @proxy ||= ( ENV['http_proxy'] || ENV['HTTP_PROXY'] )
     end
 
     private
@@ -127,8 +135,9 @@ module OLS
       HTTPI.log_level = OLS.log_level
       HTTPI.logger = OLS.logger
 
-      Savon::Client.new do
+      Savon::Client.new do |wsdl, http|
         wsdl.document = "http://www.ebi.ac.uk/ontology-lookup/OntologyQuery.wsdl"
+        http.proxy = OLS.proxy unless OLS.proxy.nil?
       end
     end
   end
