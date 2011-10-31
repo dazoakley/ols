@@ -160,6 +160,12 @@ class OLSTermTest < Test::Unit::TestCase
         assert emap0.is_root?
         assert_equal false, emap0.is_leaf?
       end
+
+      should 'be able to give its depth level' do
+        assert_equal 0, OLS.find_by_id('EMAP:0').level
+        assert_equal 4, @emap_term.level
+        assert_equal 4, @mp_term.level
+      end
     end
   end
 end

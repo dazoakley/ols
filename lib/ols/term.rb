@@ -23,21 +23,21 @@ module OLS
 
     # Is this a root node?
     #
-    # @return [Boolean] returns true/false depending on if this is a root node or not...
+    # @return [Boolean] +true+/+false+ depending on if this is a root node or not...
     def is_root?
       self.parents.empty?
     end
 
     # Is this a leaf node?
     #
-    # @return [Boolean] returns true/false depending on if this is a leaf node or not...
+    # @return [Boolean] +true+/+false+ depending on if this is a leaf node or not...
     def is_leaf?
       self.children.empty?
     end
 
     # Is this ontology term obsolete?
     #
-    # @return [Boolean] returns true/false depending on if this term is obsolete or not...
+    # @return [Boolean] +true+/+false+ depending on if this term is obsolete or not...
     def is_obsolete?
       @is_obsolete ||= OLS.request(:is_obsolete) { soap.body = { :termId => self.term_id } }
     end
@@ -132,7 +132,7 @@ module OLS
     alias :all_parent_term_ids :all_parent_ids
     alias :all_parent_term_names :all_parent_names
 
-    # Returns the child terms for this ontology term
+    # Returns the child terms for this ontology term.
     #
     # @return [Array] An array of child OLS::Term objects
     def children
@@ -143,7 +143,7 @@ module OLS
             @children = response[:item].map { |term| OLS::Term.new(term[:key],term[:value]) }
           else
             term = response[:item]
-            @children = OLS::Term.new(term[:key],term[:value])
+            @children = [ OLS::Term.new(term[:key],term[:value]) ]
           end
         end
 
@@ -151,6 +151,13 @@ module OLS
       end
 
       @children ||= []
+    end
+
+    # Returns +true+ if the ontology term has any children.
+    #
+    # @return [Boolean] true/false depending on if this term has children or not...
+    def has_children?
+      !self.children.empty?
     end
 
     # Convenience method for accessing specific child terms.
@@ -203,6 +210,33 @@ module OLS
 
     alias :all_child_term_ids :all_child_ids
     alias :all_child_term_names :all_child_names
+
+    # Pretty prints the (sub)tree rooted at this ontology term.
+    #
+    # @param [Number] level The indentation level (4 spaces) to start with.
+    def print_tree(level=1)
+      if is_root?
+        print "*"
+      else
+        print(' ' * (level - 1) * 4)
+        print "|---"
+        print( self.has_children? ? "+" : ">" )
+      end
+
+      puts " #{self.term_id}"
+
+      self.children.each { |child| child.print_tree(level + 1)}
+    end
+
+    # Returns depth of this term in its ontology tree.  Depth of a node is defined as:
+    #
+    # Depth:: Length of the terms path to its root.  Depth of a root term is zero.
+    #
+    # @return [Number] Depth of this node.
+    def level
+      return 0 if self.is_root?
+      1 + parents.first.level
+    end
 
     private
 
