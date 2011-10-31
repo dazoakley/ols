@@ -4,7 +4,7 @@ module OLS
 
   # Class representing an ontology term
   #
-  # @author Darren Oakley
+  # @author Darren Oakley (https://github.com/dazoakley)
   class Term
     attr_reader :term_id, :term_name
 
@@ -78,10 +78,16 @@ module OLS
         response = OLS.request(:get_term_parents) { soap.body = { :termId => self.term_id } }
         unless response.nil?
           if response[:item].is_a? Array
-            @parents = response[:item].map { |term| OLS::Term.new(term[:key],term[:value]) }
+            @parents = response[:item].map do |term|
+              parent = OLS::Term.new(term[:key],term[:value])
+              parent.children = [ self ]
+              parent
+            end
           else
             term = response[:item]
-            @parents = [ OLS::Term.new(term[:key],term[:value]) ]
+            parent = OLS::Term.new(term[:key],term[:value])
+            parent.children = [ self ]
+            @parents = [ parent ]
           end
         end
 
@@ -140,10 +146,16 @@ module OLS
         response = OLS.request(:get_term_children) { soap.body = { :termId => self.term_id, :distance => 1, :relationTypes => [1,2,3,4,5] } }
         unless response.nil?
           if response[:item].is_a? Array
-            @children = response[:item].map { |term| OLS::Term.new(term[:key],term[:value]) }
+            @children = response[:item].map do |term|
+              child = OLS::Term.new(term[:key],term[:value])
+              child.parents = [ self ]
+              child
+            end
           else
             term = response[:item]
-            @children = [ OLS::Term.new(term[:key],term[:value]) ]
+            child = OLS::Term.new(term[:key],term[:value])
+            child.parents = [ self ]
+            @children = [ child ]
           end
         end
 
@@ -238,8 +250,90 @@ module OLS
       1 + parents.first.level
     end
 
+    # Returns the root term for this ontology.
+    #
+    # @return [OLS::Term] The root term for this ontology
+    def root
+      root = self
+      root = root.parents.first while !root.is_root?
+      root
+    end
+
+    # Merge two trees that share the same root node. Returns a new tree conating the 
+    # contents of the merge between other_tree and self. Duplicate nodes (coming from 
+    # other_tree) will NOT be overwritten in self.
+    #
+    # @param [OLS::Term] other_tree The other tree to merge with.
+    # @return [OLS::Term] the resulting tree following the merge.
+    #
+    # @raise [TypeError] This exception is raised if other_tree is not a OLS::Term.
+    # @raise [ArgumentError] This exception is raised if other_tree does not have the same root node as self.
+    def merge( other_tree )
+      check_merge_prerequisites( other_tree )
+
+      target_tree = self.clone
+      target_tree.focus_tree_around_me!
+
+      donor_tree = other_tree.clone
+      donor_tree.focus_tree_around_me!
+
+      new_tree = merge_trees( target_tree.root, donor_tree.root )
+    end
+
+    # Flesh out and focus the ontology tree around this term.
+    #
+    # This will fetch all children and parents for this term, and will also trick each 
+    # parent/child object into thinking the ontology tree is fully formed so no further 
+    # requests to OLS will be made (to further flesh out the tree).
+    #
+    # i.e. This allows us to do the following
+    #
+    #   e = OLS.find_by_id('EMAP:3018')
+    #   e.focus_tree_around_me!
+    #   e.root.print_tree
+    #
+    # gives:
+    #   * EMAP:0
+    #       |---+ EMAP:2636
+    #           |---+ EMAP:2822
+    #               |---+ EMAP:2987
+    #                   |---+ EMAP:3018
+    #                       |---+ EMAP:3022
+    #                           |---+ EMAP:3023
+    #                               |---+ EMAP:3024
+    #                                   |---> EMAP:3025
+    #                                   |---> EMAP:3026
+    #                               |---+ EMAP:3027
+    #                                   |---> EMAP:3029
+    #                                   |---> EMAP:3028
+    #                               |---+ EMAP:3030
+    #                                   |---> EMAP:3031
+    #                                   |---> EMAP:3032
+    #                       |---> EMAP:3019
+    #                       |---+ EMAP:3020
+    #                           |---> EMAP:3021
+    #
+    # without e.focus_tree_around_me! it would print the *complete* EMAP tree (>13,000 terms).
+    def focus_tree_around_me!
+      # TODO: write tests for me!!!!
+      self.all_parents.each do |parent|
+        parent.instance_variable_set :@already_fetched_parents, true
+        parent.instance_variable_set :@already_fetched_children, true
+      end
+
+      self.all_children.each do |child|
+        child.instance_variable_set :@already_fetched_parents, true
+        child.instance_variable_set :@already_fetched_children, true
+      end
+    end
+
+    protected
+
+    attr_writer :children, :parents
+
     private
 
+    # TODO: document me...
     def get_term_metadata
       unless @already_fetched_metadata
         meta = [ OLS.request(:get_term_metadata) { soap.body = { :termId => self.term_id } }[:item] ].flatten
@@ -257,6 +351,40 @@ module OLS
 
         @already_fetched_metadata = true
       end
+    end
+
+    # Utility function to check that the conditions for an ontology tree merge are met.
+    #
+    # @see #merge
+    def check_merge_prerequisites( other_tree )
+      unless other_tree.is_a?(OLS::Term)
+        raise TypeError, 'You can only merge in another instance of OLS::Term'
+      end
+
+      unless self.root.term_id == other_tree.root.term_id
+        raise ArgumentError, 'Unable to merge trees as they do not share the same root'
+      end
+    end
+
+    # Utility function to recursivley merge two ontology (sub)trees.
+    #
+    # @param [OLS::Term] tree1 The target ontology tree to merge into.
+    # @param [OLS::Term] tree2 The donor ontology tree (that will be merged into target).
+    # @return [OLS::Term] The merged ontology tree.
+    def merge_trees( tree1, tree2 )
+      names1 = tree1.has_children? ? tree1.children.map { |child| child.term_id } : []
+      names2 = tree2.has_children? ? tree2.children.map { |child| child.term_id } : []
+
+      names_to_merge = names2 - names1
+      names_to_merge.each do |name|
+        # tree1 << tree2[name].detached_subtree_copy
+      end
+
+      tree1.children.each do |child|
+        merge_trees( child, tree2[child.term_id] ) unless tree2[child.term_id].nil?
+      end
+
+      return tree1
     end
 
   end

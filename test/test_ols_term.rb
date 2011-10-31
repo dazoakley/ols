@@ -166,6 +166,21 @@ class OLSTermTest < Test::Unit::TestCase
         assert_equal 4, @emap_term.level
         assert_equal 4, @mp_term.level
       end
+
+      should 'be able to merge two ontology trees that share a common root term' do
+        emap_term2 = OLS.find_by_id('EMAP:3003')
+
+        merged_tree = @emap_term.merge(emap_term2)
+
+        assert( merged_tree['EMAP:2636']['EMAP:2822']['EMAP:2987'].is_a?(OLS::Term) )
+        assert_equal( 2, merged_tree['EMAP:2636']['EMAP:2822']['EMAP:2987'].children.size )
+
+        another_ont     = OLS.find_by_id('GO:0023034')
+        yet_another_ont = OLS.find_by_id('EMAP:3003')
+
+        assert_raise(ArgumentError) { foo = another_ont.merge(yet_another_ont) }
+        assert_raise(TypeError) { bar = another_ont.merge('EMAP:3003') }
+      end
     end
   end
 end
