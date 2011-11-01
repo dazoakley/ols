@@ -13,12 +13,19 @@ module OLS
     # @param [String] term_id The ontology term id
     # @param [String] term_name The ontology term name
     def initialize(term_id,term_name)
-      @term_id = term_id
+      @term_id   = term_id
       @term_name = term_name
 
       @already_fetched_parents  = false
       @already_fetched_children = false
       @already_fetched_metadata = false
+    end
+
+    # Object function used by .clone and .dup to create copies of OLS::Term objects.
+    def initialize_copy(source)
+      super
+      @parents  = source.parents
+      @children = source.children
     end
 
     # Is this a root node?
@@ -68,6 +75,13 @@ module OLS
     # @return [String] A string representation of an OLS::Term
     def to_s
       "#{@term_id} - #{@term_name}"
+    end
+
+    # Returns the size of the full ontology tree.
+    #
+    # @return [Integer] The size of the full ontology tree
+    def size
+      self.root.all_children.size + 1
     end
 
     # Returns the direct parent terms for this ontology term
@@ -259,25 +273,20 @@ module OLS
       root
     end
 
-    # Merge two trees that share the same root node. Returns a new tree conating the 
-    # contents of the merge between other_tree and self. Duplicate nodes (coming from 
+    # Merge in another ontology tree that shares the same root. Duplicate nodes (coming from
     # other_tree) will NOT be overwritten in self.
     #
     # @param [OLS::Term] other_tree The other tree to merge with.
-    # @return [OLS::Term] the resulting tree following the merge.
-    #
     # @raise [TypeError] This exception is raised if other_tree is not a OLS::Term.
-    # @raise [ArgumentError] This exception is raised if other_tree does not have the same root node as self.
-    def merge( other_tree )
-      check_merge_prerequisites( other_tree )
+    # @raise [ArgumentError] This exception is raised if other_tree does not have the same root as self.
+    def merge!( other_tree )
+      raise TypeError, 'You can only merge in another instance of OLS::Term' unless other_tree.is_a?(OLS::Term)
+      raise ArgumentError, 'Unable to merge trees as they do not share the same root' unless self.root.term_id == other_tree.root.term_id
 
-      target_tree = self.clone
-      target_tree.focus_tree_around_me!
+      self.focus_tree_around_me!
+      other_tree.focus_tree_around_me!
 
-      donor_tree = other_tree.clone
-      donor_tree.focus_tree_around_me!
-
-      new_tree = merge_trees( target_tree.root, donor_tree.root )
+      merge_trees( self.root, other_tree.root )
     end
 
     # Flesh out and focus the ontology tree around this term.
@@ -315,7 +324,6 @@ module OLS
     #
     # without e.focus_tree_around_me! it would print the *complete* EMAP tree (>13,000 terms).
     def focus_tree_around_me!
-      # TODO: write tests for me!!!!
       self.all_parents.each do |parent|
         parent.instance_variable_set :@already_fetched_parents, true
         parent.instance_variable_set :@already_fetched_children, true
@@ -327,13 +335,24 @@ module OLS
       end
     end
 
+    # Returns a copy of this ontology term object with the parents removed.
+    #
+    # @return [OLS::Term] A copy of this ontology term object with the parents removed
+    def detached_subtree_copy
+      copy = self.dup
+      copy.parents  = []
+      copy.instance_variable_set :@already_fetched_parents, true
+      copy
+    end
+
     protected
 
     attr_writer :children, :parents
 
     private
 
-    # TODO: document me...
+    # Utility function to hit the :get_term_metadata soap endpoint and extract the
+    # given metadata for an ontology term.
     def get_term_metadata
       unless @already_fetched_metadata
         meta = [ OLS.request(:get_term_metadata) { soap.body = { :termId => self.term_id } }[:item] ].flatten
@@ -353,35 +372,26 @@ module OLS
       end
     end
 
-    # Utility function to check that the conditions for an ontology tree merge are met.
-    #
-    # @see #merge
-    def check_merge_prerequisites( other_tree )
-      unless other_tree.is_a?(OLS::Term)
-        raise TypeError, 'You can only merge in another instance of OLS::Term'
-      end
-
-      unless self.root.term_id == other_tree.root.term_id
-        raise ArgumentError, 'Unable to merge trees as they do not share the same root'
-      end
-    end
-
     # Utility function to recursivley merge two ontology (sub)trees.
     #
     # @param [OLS::Term] tree1 The target ontology tree to merge into.
     # @param [OLS::Term] tree2 The donor ontology tree (that will be merged into target).
     # @return [OLS::Term] The merged ontology tree.
     def merge_trees( tree1, tree2 )
-      names1 = tree1.has_children? ? tree1.children.map { |child| child.term_id } : []
-      names2 = tree2.has_children? ? tree2.children.map { |child| child.term_id } : []
+      names1 = tree1.children.map(&:term_id)
+      names2 = tree2.children.map(&:term_id)
 
       names_to_merge = names2 - names1
       names_to_merge.each do |name|
-        # tree1 << tree2[name].detached_subtree_copy
+        new_child         = tree2[name].detached_subtree_copy
+        new_child.parents = [ tree1 ]
+        tree1.children.push( new_child )
       end
 
       tree1.children.each do |child|
         merge_trees( child, tree2[child.term_id] ) unless tree2[child.term_id].nil?
+        child.instance_variable_set :@already_fetched_parents, true
+        child.instance_variable_set :@already_fetched_children, true
       end
 
       return tree1

@@ -112,12 +112,9 @@ class OLSTermTest < Test::Unit::TestCase
       end
 
       should 'be able to report its children' do
+        assert @emap_term.has_children?
         assert_equal 3, @emap_term.children.size
-        emap3022_included = false
-        @emap_term.children.each do |child|
-          emap3022_included = true if child.term_id.eql?('EMAP:3022')
-        end
-        assert emap3022_included
+        assert @emap_term['EMAP:3022'].is_a? OLS::Term
       end
 
       should 'be able to generate a flat list of ALL children (down the ontology)' do
@@ -167,19 +164,145 @@ class OLSTermTest < Test::Unit::TestCase
         assert_equal 4, @mp_term.level
       end
 
-      should 'be able to merge two ontology trees that share a common root term' do
-        emap_term2 = OLS.find_by_id('EMAP:3003')
+      should 'be able to "focus" an ontology tree around a given term' do
+        @emap_term.focus_tree_around_me!
 
-        merged_tree = @emap_term.merge(emap_term2)
+        # We expect the following tree from this...
+        #
+        # * EMAP:0
+        #     |---+ EMAP:2636
+        #         |---+ EMAP:2822
+        #             |---+ EMAP:2987
+        #                 |---+ EMAP:3018
+        #                     |---+ EMAP:3022
+        #                         |---+ EMAP:3023
+        #                             |---+ EMAP:3024
+        #                                 |---> EMAP:3025
+        #                                 |---> EMAP:3026
+        #                             |---+ EMAP:3027
+        #                                 |---> EMAP:3029
+        #                                 |---> EMAP:3028
+        #                             |---+ EMAP:3030
+        #                                 |---> EMAP:3031
+        #                                 |---> EMAP:3032
+        #                     |---> EMAP:3019
+        #                     |---+ EMAP:3020
+        #                         |---> EMAP:3021
 
-        assert( merged_tree['EMAP:2636']['EMAP:2822']['EMAP:2987'].is_a?(OLS::Term) )
-        assert_equal( 2, merged_tree['EMAP:2636']['EMAP:2822']['EMAP:2987'].children.size )
+        assert_equal 'EMAP:0', @emap_term.root.term_id
+        assert_equal 1, @emap_term.root.children.size
+        assert_equal 3, @emap_term.children.size
+        assert_equal 4, @emap_term.level
+
+        assert @emap_term.instance_variable_get :@already_fetched_parents
+        assert @emap_term.instance_variable_get :@already_fetched_children
+
+        assert @emap_term.root.instance_variable_get :@already_fetched_parents
+        assert @emap_term.root.instance_variable_get :@already_fetched_children
+      end
+
+      should 'be able to merge in another ontology tree that shares a common root term' do
+        # We're going to try and merge this subtree (for EMAP:3018)
+        #
+        # * EMAP:0
+        #     |---+ EMAP:2636
+        #         |---+ EMAP:2822
+        #             |---+ EMAP:2987
+        #                 |---+ EMAP:3018
+        #                     |---+ EMAP:3022
+        #                         |---+ EMAP:3023
+        #                             |---+ EMAP:3024
+        #                                 |---> EMAP:3025
+        #                                 |---> EMAP:3026
+        #                             |---+ EMAP:3027
+        #                                 |---> EMAP:3029
+        #                                 |---> EMAP:3028
+        #                             |---+ EMAP:3030
+        #                                 |---> EMAP:3031
+        #                                 |---> EMAP:3032
+        #                     |---> EMAP:3019
+        #                     |---+ EMAP:3020
+        #                         |---> EMAP:3021
+        #
+        # With this one (for EMAP:3003)
+        #
+        # * EMAP:0
+        #     |---+ EMAP:2636
+        #         |---+ EMAP:2822
+        #             |---+ EMAP:2987
+        #                 |---+ EMAP:3003
+        #                     |---> EMAP:3012
+        #                     |---+ EMAP:3013
+        #                         |---> EMAP:3014
+        #                         |---> EMAP:3016
+        #                         |---> EMAP:3015
+        #                         |---> EMAP:3017
+        #                     |---+ EMAP:3004
+        #                         |---> EMAP:3005
+        #                     |---> EMAP:3006
+        #                     |---+ EMAP:3007
+        #                         |---> EMAP:3008
+        #                         |---> EMAP:3009
+        #                     |---+ EMAP:3010
+        #                         |---> EMAP:3011
+        #
+        # To give us...
+        #
+        # * EMAP:0
+        #     |---+ EMAP:2636
+        #         |---+ EMAP:2822
+        #             |---+ EMAP:2987
+        #                 |---+ EMAP:3018
+        #                     |---+ EMAP:3022
+        #                         |---+ EMAP:3023
+        #                             |---+ EMAP:3024
+        #                                 |---> EMAP:3025
+        #                                 |---> EMAP:3026
+        #                             |---+ EMAP:3027
+        #                                 |---> EMAP:3029
+        #                                 |---> EMAP:3028
+        #                             |---+ EMAP:3030
+        #                                 |---> EMAP:3031
+        #                                 |---> EMAP:3032
+        #                     |---> EMAP:3019
+        #                     |---+ EMAP:3020
+        #                         |---> EMAP:3021
+        #                 |---+ EMAP:3003
+        #                     |---> EMAP:3012
+        #                     |---+ EMAP:3013
+        #                         |---> EMAP:3014
+        #                         |---> EMAP:3016
+        #                         |---> EMAP:3015
+        #                         |---> EMAP:3017
+        #                     |---+ EMAP:3004
+        #                         |---> EMAP:3005
+        #                     |---> EMAP:3006
+        #                     |---+ EMAP:3007
+        #                         |---> EMAP:3008
+        #                         |---> EMAP:3009
+        #                     |---+ EMAP:3010
+        #                         |---> EMAP:3011
+        #
+
+        @emap_term.focus_tree_around_me!
+        assert_equal 19, @emap_term.size
+
+
+        @emap_term.merge!( OLS.find_by_id('EMAP:3003') )
+        assert_equal 34, @emap_term.size
+
+        main_merge_node = @emap_term.root['EMAP:2636']['EMAP:2822']['EMAP:2987']
+
+        assert main_merge_node.is_a?(OLS::Term)
+        assert_equal 2, main_merge_node.children.size
+        assert main_merge_node.children.map(&:term_id).include? 'EMAP:3003'
+        assert main_merge_node.children.map(&:term_id).include? 'EMAP:3018'
 
         another_ont     = OLS.find_by_id('GO:0023034')
         yet_another_ont = OLS.find_by_id('EMAP:3003')
 
-        assert_raise(ArgumentError) { foo = another_ont.merge(yet_another_ont) }
-        assert_raise(TypeError) { bar = another_ont.merge('EMAP:3003') }
+        assert_raise(ArgumentError) { another_ont.merge!(yet_another_ont) }
+        assert_raise(TypeError) { another_ont.merge!('EMAP:3003') }
       end
     end
   end
