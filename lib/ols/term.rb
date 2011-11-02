@@ -347,6 +347,61 @@ module OLS
       copy
     end
 
+    # Save an image file showing graph structure of all children from the current term.
+    # Requires graphviz to convert the .dot source file to an image file.
+    #
+    # @param [String] filename The filename to save the DOT and image files to - omit the file extension
+    # @param [String] fmt The image format to produce - i.e. png or jpg
+    def write_children_to_graphic_file(filename='graph',fmt='png')
+      dotfile = filename + ".dot"
+      imgfile = filename + "." + fmt
+
+      verticies = [ self ] + self.all_children
+      edges = self.all_children.map do |child|
+        child.parents.map { |parent| "    #{parent.term_id} -> #{child.term_id}".gsub(':','') }
+      end.flatten.uniq
+
+      write_dot_and_image_file(dotfile,imgfile,fmt,verticies,edges)
+    end
+
+    # Save an image file showing graph structure of all parents for the current term.
+    # Requires graphviz to convert the .dot source file to an image file.
+    #
+    # @param [String] filename The filename to save the DOT and image files to - omit the file extension
+    # @param [String] fmt The image format to produce - i.e. png or jpg
+    def write_parentage_to_graphic_file(filename='graph',fmt='png')
+      dotfile = filename + ".dot"
+      imgfile = filename + "." + fmt
+
+      verticies = self.all_parents + [ self ]
+      edges = self.all_parents.map do |parent|
+        parent.children.map { |child| "    #{parent.term_id} -> #{child.term_id}".gsub(':','') }
+      end.flatten.uniq
+
+      write_dot_and_image_file(dotfile,imgfile,fmt,verticies,edges)
+    end
+
+    # Image drawing utility function.  This is responsible for writing the DOT 
+    # source file and converting it into the desired image format.
+    #
+    # @param [String] dotfile The DOT filename
+    # @param [String] imgfile The image filename
+    # @param [String] fmt The image format to produce - i.e. png or jpg
+    # @param [Array] verticies An array of OLS::Term objects to enter as verticies in the graph
+    # @param [Array] edges An array of edge statements already pre-formatted for DOT format
+    def write_dot_and_image_file(dotfile,imgfile,fmt,verticies,edges)
+      File.open(dotfile,'w') do |f|
+        f << "digraph OntologyTree_#{self.term_id.gsub(':','')} {\n"
+        f << verticies.map { |vert| "    #{vert.term_id.gsub(':','')} [label=\"#{vert.term_id}\"]" }.join("\n")
+        f << "\n"
+        f << edges.join("\n")
+        f << "\n"
+        f << "}\n"
+      end
+      system( "dot -T#{fmt} #{dotfile} -o #{imgfile}" )
+    end
+    private(:write_dot_and_image_file)
+
     protected
 
     # Stop this object from trying to fetch up more parent terms from OLS
