@@ -55,10 +55,6 @@ module OLS
       @is_obsolete ||= OLS.request(:is_obsolete) { soap.body = { :termId => self.term_id } }
     end
 
-    # def xrefs
-    #   OLS.request(:get_term_xrefs) { soap.body = { :termId => self.term_id } }
-    # end
-
     # The ontology term definition
     #
     # @return [String] The ontology term definition
@@ -88,6 +84,25 @@ module OLS
     # @return [Integer] The size of the full ontology tree
     def size
       self.root.all_children.size + 1
+    end
+
+    # Returns depth of this term in its ontology tree.  Depth of a node is defined as:
+    #
+    # Depth:: Length of the terms path to its root.  Depth of a root term is zero.
+    #
+    # @return [Number] Depth of this node.
+    def level
+      return 0 if self.is_root?
+      1 + parents.first.level
+    end
+
+    # Returns the root term for this ontology.
+    #
+    # @return [OLS::Term] The root term for this ontology
+    def root
+      root = self
+      root = root.parents.first while !root.is_root?
+      root
     end
 
     # Returns the direct parent terms for this ontology term
@@ -241,42 +256,6 @@ module OLS
     alias :all_child_term_ids :all_child_ids
     alias :all_child_term_names :all_child_names
 
-    # Pretty prints the (sub)tree rooted at this ontology term.
-    #
-    # @param [Number] level The indentation level (4 spaces) to start with.
-    def print_tree(level=1)
-      if is_root?
-        print "*"
-      else
-        print(' ' * (level - 1) * 4)
-        print "|---"
-        print( self.has_children? ? "+" : ">" )
-      end
-
-      puts " #{self.term_id}"
-
-      self.children.each { |child| child.print_tree(level + 1)}
-    end
-
-    # Returns depth of this term in its ontology tree.  Depth of a node is defined as:
-    #
-    # Depth:: Length of the terms path to its root.  Depth of a root term is zero.
-    #
-    # @return [Number] Depth of this node.
-    def level
-      return 0 if self.is_root?
-      1 + parents.first.level
-    end
-
-    # Returns the root term for this ontology.
-    #
-    # @return [OLS::Term] The root term for this ontology
-    def root
-      root = self
-      root = root.parents.first while !root.is_root?
-      root
-    end
-
     # Merge in another ontology tree that shares the same root. Duplicate nodes (coming from
     # other_tree) will NOT be overwritten in self.
     #
@@ -345,6 +324,23 @@ module OLS
       copy.parents = []
       copy.lock_parents
       copy
+    end
+
+    # Pretty prints the (sub)tree rooted at this ontology term.
+    #
+    # @param [Number] level The indentation level (4 spaces) to start with.
+    def print_tree(level=1)
+      if is_root?
+        print "*"
+      else
+        print(' ' * (level - 1) * 4)
+        print "|---"
+        print( self.has_children? ? "+" : ">" )
+      end
+
+      puts " #{self.term_id}"
+
+      self.children.each { |child| child.print_tree(level + 1)}
     end
 
     # Save an image file showing graph structure of all children from the current term.
