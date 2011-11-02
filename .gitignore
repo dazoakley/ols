@@ -7,3 +7,6 @@ doc/*
 pkg/*
 coverage/*
 test/vcr_cassettes*
+*.dot
+*.png
+*.jpg
