@@ -397,6 +397,7 @@ class OLSTermTest < Test::Unit::TestCase
           @emap_term.write_children_to_graphic_file
           @emap_term.write_parentage_to_graphic_file
         end
+        system("rm graph.dot graph.png")
       end
 
       should 'allow users to print a tree representation of the graph to STDOUT' do
