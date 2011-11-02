@@ -131,6 +131,23 @@ module OLS
       @graph[term_id][:parents].map{ |parent_id| self.find_in_graph(parent_id) }
     end
 
+    # Returns the term_ids for the direct parents of this term.
+    #
+    # @return [Array] The term_ids for the direct parents of this term
+    def parent_ids
+      parents.map(&:term_id)
+    end
+
+    # Returns the term_names for the direct parents of this term.
+    #
+    # @return [Array] The term_names for the direct parents of this term
+    def parent_names
+      parents.map(&:term_name)
+    end
+
+    alias :parent_term_ids :parent_ids
+    alias :parent_term_names :parent_names
+
     # Returns an array of all parent term objects for this ontology term
     # (all the way to the top of the ontology).  The array is ordered
     # with the root term first and the most direct parent(s) last.
@@ -197,6 +214,23 @@ module OLS
 
       @graph[term_id][:children].map{ |child_id| self.find_in_graph(child_id) }
     end
+
+    # Returns the term_ids for the direct children of this term.
+    #
+    # @return [Array] The term_ids for the direct children of this term
+    def children_ids
+      children.map(&:term_id)
+    end
+
+    # Returns the term_names for the direct children of this term.
+    #
+    # @return [Array] The term_names for the direct children of this term
+    def children_names
+      children.map(&:term_name)
+    end
+
+    alias :children_term_ids :children_ids
+    alias :children_term_names :children_names
 
     # Returns +true+ if the ontology term has any children.
     #

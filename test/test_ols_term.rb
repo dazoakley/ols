@@ -72,11 +72,15 @@ class OLSTermTest < Test::Unit::TestCase
         assert_equal 1, @emap_term.parents.size
         assert_equal 'EMAP:2987', @emap_term.parents.first.term_id
 
-        mp_term_parent_term_ids = @mp_term.parents.map(&:term_id)
-
         assert_equal 2, @mp_term.parents.size
+
+        mp_term_parent_term_ids = @mp_term.parent_ids
         assert mp_term_parent_term_ids.include?('MP:0000545')
         assert mp_term_parent_term_ids.include?('MP:0009250')
+
+        mp_term_parent_term_names = @mp_term.parent_names
+        assert mp_term_parent_term_names.include? OLS.find_by_id('MP:0000545').term_name
+        assert mp_term_parent_term_names.include? OLS.find_by_id('MP:0009250').term_name
       end
 
       should 'be able to generate a flat list of ALL parents (up the ontology)' do
@@ -115,6 +119,8 @@ class OLSTermTest < Test::Unit::TestCase
         assert @emap_term.has_children?
         assert_equal 3, @emap_term.children.size
         assert @emap_term['EMAP:3022'].is_a? OLS::Term
+        assert @emap_term.children_ids.include? 'EMAP:3022'
+        assert @emap_term.children_names.include? OLS.find_by_id('EMAP:3022').term_name
       end
 
       should 'be able to generate a flat list of ALL children (down the ontology)' do
@@ -383,6 +389,43 @@ class OLSTermTest < Test::Unit::TestCase
         assert_equal @emap_term.all_parent_names, copy.all_parent_names
 
         OLS.unstub(:request)
+      end
+
+      should 'allow users to write image files showing the graph structure' do
+        @emap_term.focus_graph!
+        assert_silent do
+          @emap_term.write_children_to_graphic_file
+          @emap_term.write_parentage_to_graphic_file
+        end
+      end
+
+      should 'allow users to print a tree representation of the graph to STDOUT' do
+        @emap_term.focus_graph!
+        emap_tree = <<-EMAP
+* EMAP:0
+    |---+ EMAP:2636
+        |---+ EMAP:2822
+            |---+ EMAP:2987
+                |---+ EMAP:3018
+                    |---+ EMAP:3022
+                        |---+ EMAP:3023
+                            |---+ EMAP:3024
+                                |---> EMAP:3025
+                                |---> EMAP:3026
+                            |---+ EMAP:3027
+                                |---> EMAP:3029
+                                |---> EMAP:3028
+                            |---+ EMAP:3030
+                                |---> EMAP:3031
+                                |---> EMAP:3032
+                    |---> EMAP:3019
+                    |---+ EMAP:3020
+                        |---> EMAP:3021
+EMAP
+
+        assert_output(emap_tree.lstrip,nil) do
+          @emap_term.root.print_tree
+        end
       end
     end
   end
