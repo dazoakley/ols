@@ -165,9 +165,7 @@ class OLSTermTest < Test::Unit::TestCase
       end
 
       should 'be able to "focus" an ontology tree around a given term' do
-        @emap_term.focus_tree_around_me!
-
-        # We expect the following tree from this...
+        # First, test the following EMAP tree...
         #
         # * EMAP:0
         #     |---+ EMAP:2636
@@ -189,6 +187,8 @@ class OLSTermTest < Test::Unit::TestCase
         #                     |---+ EMAP:3020
         #                         |---> EMAP:3021
 
+        @emap_term.focus_tree_around_me!
+
         assert_equal 'EMAP:0', @emap_term.root.term_id
         assert_equal 1, @emap_term.root.children.size
         assert_equal 3, @emap_term.children.size
@@ -199,6 +199,27 @@ class OLSTermTest < Test::Unit::TestCase
 
         assert @emap_term.root.instance_variable_get :@already_fetched_parents
         assert @emap_term.root.instance_variable_get :@already_fetched_children
+
+        # Now test the following MP tree...
+        #
+        # * MP:0000001
+        #     |---+ MP:0005371
+        #         |---+ MP:0000545
+        #                 |---+ MP:0002115
+        #                     ...
+        #     |---+ MP:0005390
+        #         |---+ MP:0005508
+        #             |---+ MP:0009250
+        #                 |---+ MP:0002115
+        #                     ...
+        #
+
+        @mp_term.focus_tree_around_me!
+
+        assert_equal 'MP:0000001', @mp_term.root.term_id
+        assert_equal 2, @mp_term.root.children.size
+        assert @mp_term.root.children.map(&:term_id).include? 'MP:0005371'
+        assert @mp_term.root.children.map(&:term_id).include? 'MP:0005390'
       end
 
       should 'be able to merge in another ontology tree that shares a common root term' do
@@ -287,7 +308,6 @@ class OLSTermTest < Test::Unit::TestCase
         @emap_term.focus_tree_around_me!
         assert_equal 19, @emap_term.size
 
-
         @emap_term.merge!( OLS.find_by_id('EMAP:3003') )
         assert_equal 34, @emap_term.size
 
@@ -303,6 +323,16 @@ class OLSTermTest < Test::Unit::TestCase
 
         assert_raise(ArgumentError) { another_ont.merge!(yet_another_ont) }
         assert_raise(TypeError) { another_ont.merge!('EMAP:3003') }
+      end
+
+      should 'allow deep copying of objects' do
+        @emap_term.focus_tree_around_me!
+        copy = @emap_term.dup
+
+        assert @emap_term.object_id != copy.object_id
+        assert @emap_term.instance_variable_get(:@graph).object_id != copy.instance_variable_get(:@graph).object_id
+        assert_equal @emap_term.size, copy.size
+        assert_equal @emap_term.root.term_id, copy.root.term_id
       end
     end
   end

@@ -12,20 +12,26 @@ module OLS
     #
     # @param [String] term_id The ontology term id
     # @param [String] term_name The ontology term name
-    def initialize(term_id,term_name)
+    def initialize(term_id,term_name,graph=nil)
       @term_id   = term_id
       @term_name = term_name
 
       @already_fetched_parents  = false
       @already_fetched_children = false
       @already_fetched_metadata = false
+
+      if graph.nil?
+        @graph = OLS::Graph.new
+        @graph.add_to_graph(self)
+      else
+        @graph = graph
+      end
     end
 
     # Object function used by .clone and .dup to create copies of OLS::Term objects.
     def initialize_copy(source)
       super
-      @parents  = source.parents
-      @children = source.children
+      @graph = source.instance_variable_get(:@graph).dup
     end
 
     # Is this a root node?
@@ -87,28 +93,27 @@ module OLS
     # Returns the direct parent terms for this ontology term
     #
     # @return [Array] An array of OLS::Term objects
-    def parents
-      unless @already_fetched_parents
+    def parents(skip_fetch=false)
+      unless @already_fetched_parents || skip_fetch
+        # puts "--- REQUESTING PARENTS (#{self.term_id}) ---"
         response = OLS.request(:get_term_parents) { soap.body = { :termId => self.term_id } }
         unless response.nil?
           if response[:item].is_a? Array
-            @parents = response[:item].map do |term|
-              parent = OLS::Term.new(term[:key],term[:value])
-              parent.children = [ self ]
-              parent
+            response[:item].each do |term|
+              parent = @graph.find(term[:key]) || OLS::Term.new(term[:key],term[:value],@graph)
+              self.add_parent(parent)
             end
           else
             term = response[:item]
-            parent = OLS::Term.new(term[:key],term[:value])
-            parent.children = [ self ]
-            @parents = [ parent ]
+            parent = @graph.find(term[:key]) || OLS::Term.new(term[:key],term[:value],@graph)
+            self.add_parent(parent)
           end
         end
 
         @already_fetched_parents = true
       end
 
-      @parents ||= []
+      @graph[term_id][:parents].map{ |parent_id| @graph.find(parent_id) }
     end
 
     # Returns an array of all parent term objects for this ontology term
@@ -155,28 +160,27 @@ module OLS
     # Returns the child terms for this ontology term.
     #
     # @return [Array] An array of child OLS::Term objects
-    def children
-      unless @already_fetched_children
+    def children(skip_fetch=false)
+      unless @already_fetched_children || skip_fetch
+        # puts "--- REQUESTING CHILDREN (#{self.term_id}) ---"
         response = OLS.request(:get_term_children) { soap.body = { :termId => self.term_id, :distance => 1, :relationTypes => [1,2,3,4,5] } }
         unless response.nil?
           if response[:item].is_a? Array
-            @children = response[:item].map do |term|
-              child = OLS::Term.new(term[:key],term[:value])
-              child.parents = [ self ]
-              child
+            response[:item].each do |term|
+              child = @graph.find(term[:key]) || OLS::Term.new(term[:key],term[:value],@graph)
+              self.add_child(child)
             end
           else
             term = response[:item]
-            child = OLS::Term.new(term[:key],term[:value])
-            child.parents = [ self ]
-            @children = [ child ]
+            child = @graph.find(term[:key]) || OLS::Term.new(term[:key],term[:value],@graph)
+            self.add_child(child)
           end
         end
 
         @already_fetched_children = true
       end
 
-      @children ||= []
+      @graph[term_id][:children].map{ |child_id| @graph.find(child_id) }
     end
 
     # Returns +true+ if the ontology term has any children.
@@ -325,13 +329,11 @@ module OLS
     # without e.focus_tree_around_me! it would print the *complete* EMAP tree (>13,000 terms).
     def focus_tree_around_me!
       self.all_parents.each do |parent|
-        parent.instance_variable_set :@already_fetched_parents, true
-        parent.instance_variable_set :@already_fetched_children, true
+        parent.lock
       end
 
       self.all_children.each do |child|
-        child.instance_variable_set :@already_fetched_parents, true
-        child.instance_variable_set :@already_fetched_children, true
+        child.lock
       end
     end
 
@@ -340,14 +342,41 @@ module OLS
     # @return [OLS::Term] A copy of this ontology term object with the parents removed
     def detached_subtree_copy
       copy = self.dup
-      copy.parents  = []
-      copy.instance_variable_set :@already_fetched_parents, true
+      copy.parents = []
+      copy.lock_parents
       copy
     end
 
     protected
 
-    attr_writer :children, :parents
+    def lock_parents
+      @already_fetched_parents = true
+    end
+
+    def lock_children
+      @already_fetched_children = true
+    end
+
+    def lock
+      lock_parents
+      lock_children
+    end
+
+    def parents=(parents)
+      raise ArgumentError, "You must pass an array" unless parents.is_a?(Array)
+      parents.each { |p| raise TypeError, "You must pass an array of OLS::Term objects" unless p.is_a?(OLS::Term) }
+      @graph[self.term_id][:parents] = parents.map(&:term_id)
+    end
+
+    def add_parent(parent)
+      raise TypeError, "You must pass an OLS::Term object" unless parent.is_a?(OLS::Term)
+      @graph.add_relationship(parent,self)
+    end
+
+    def add_child(child)
+      raise TypeError, "You must pass an OLS::Term object" unless child.is_a?(OLS::Term)
+      @graph.add_relationship(self,child)
+    end
 
     private
 
@@ -385,13 +414,12 @@ module OLS
       names_to_merge.each do |name|
         new_child         = tree2[name].detached_subtree_copy
         new_child.parents = [ tree1 ]
-        tree1.children.push( new_child )
+        tree1.add_child(new_child)
       end
 
       tree1.children.each do |child|
         merge_trees( child, tree2[child.term_id] ) unless tree2[child.term_id].nil?
-        child.instance_variable_set :@already_fetched_parents, true
-        child.instance_variable_set :@already_fetched_children, true
+        child.lock
       end
 
       return tree1
