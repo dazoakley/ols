@@ -27,6 +27,7 @@ end
 
 require 'shoulda'
 require 'vcr'
+require 'mocha'
 require 'ols'
 
 # Set-up VCR for mocking up web requests.

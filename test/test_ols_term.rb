@@ -334,6 +334,56 @@ class OLSTermTest < Test::Unit::TestCase
         assert_equal @emap_term.size, copy.size
         assert_equal @emap_term.root.term_id, copy.root.term_id
       end
+
+      should 'allow serialization using Marshal' do
+        @emap_term.focus_tree_around_me!
+
+        OLS.stubs(:request).returns(nil)
+
+        # check the stubbing is okay...
+        foo = OLS.find_by_id('EMAP:3003')
+        foo.focus_tree_around_me!
+        assert_equal 1, foo.size
+
+        # now get on with testing marshal...
+        data = Marshal.dump(@emap_term)
+        copy = Marshal.load(data)
+
+        assert_equal @emap_term.term_id, copy.term_id
+        assert_equal @emap_term.term_name, copy.term_name
+        assert_equal @emap_term.size, copy.size
+        assert_equal @emap_term.root.term_id, copy.root.term_id
+        assert_equal @emap_term.all_parent_ids, copy.all_parent_ids
+        assert_equal @emap_term.all_parent_names, copy.all_parent_names
+
+        OLS.unstub(:request)
+      end
+
+      should 'allow serialization using YAML' do
+        @emap_term.focus_tree_around_me!
+
+        OLS.stubs(:request).returns(nil)
+
+        require 'yaml'
+
+        # check the stubbing is okay...
+        foo = OLS.find_by_id('EMAP:3003')
+        foo.focus_tree_around_me!
+        assert_equal 1, foo.size
+
+        # now get on with testing yaml...
+        data = @emap_term.to_yaml
+        copy = YAML.load(data)
+
+        assert_equal @emap_term.term_id, copy.term_id
+        assert_equal @emap_term.term_name, copy.term_name
+        assert_equal @emap_term.size, copy.size
+        assert_equal @emap_term.root.term_id, copy.root.term_id
+        assert_equal @emap_term.all_parent_ids, copy.all_parent_ids
+        assert_equal @emap_term.all_parent_names, copy.all_parent_names
+
+        OLS.unstub(:request)
+      end
     end
   end
 end
