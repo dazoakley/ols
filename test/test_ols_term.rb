@@ -187,7 +187,7 @@ class OLSTermTest < Test::Unit::TestCase
         #                     |---+ EMAP:3020
         #                         |---> EMAP:3021
 
-        @emap_term.focus_tree_around_me!
+        @emap_term.focus_graph!
 
         assert_equal 'EMAP:0', @emap_term.root.term_id
         assert_equal 1, @emap_term.root.children.size
@@ -214,7 +214,7 @@ class OLSTermTest < Test::Unit::TestCase
         #                     ...
         #
 
-        @mp_term.focus_tree_around_me!
+        @mp_term.focus_graph!
 
         assert_equal 'MP:0000001', @mp_term.root.term_id
         assert_equal 2, @mp_term.root.children.size
@@ -305,7 +305,7 @@ class OLSTermTest < Test::Unit::TestCase
         #                         |---> EMAP:3011
         #
 
-        @emap_term.focus_tree_around_me!
+        @emap_term.focus_graph!
         assert_equal 19, @emap_term.size
 
         @emap_term.merge!( OLS.find_by_id('EMAP:3003') )
@@ -326,7 +326,7 @@ class OLSTermTest < Test::Unit::TestCase
       end
 
       should 'allow deep copying of objects' do
-        @emap_term.focus_tree_around_me!
+        @emap_term.focus_graph!
         copy = @emap_term.dup
 
         assert @emap_term.object_id != copy.object_id
@@ -336,13 +336,13 @@ class OLSTermTest < Test::Unit::TestCase
       end
 
       should 'allow serialization using Marshal' do
-        @emap_term.focus_tree_around_me!
+        @emap_term.focus_graph!
 
         OLS.stubs(:request).returns(nil)
 
         # check the stubbing is okay...
         foo = OLS.find_by_id('EMAP:3003')
-        foo.focus_tree_around_me!
+        foo.focus_graph!
         assert_equal 1, foo.size
 
         # now get on with testing marshal...
@@ -360,7 +360,7 @@ class OLSTermTest < Test::Unit::TestCase
       end
 
       should 'allow serialization using YAML' do
-        @emap_term.focus_tree_around_me!
+        @emap_term.focus_graph!
 
         OLS.stubs(:request).returns(nil)
 
@@ -368,7 +368,7 @@ class OLSTermTest < Test::Unit::TestCase
 
         # check the stubbing is okay...
         foo = OLS.find_by_id('EMAP:3003')
-        foo.focus_tree_around_me!
+        foo.focus_graph!
         assert_equal 1, foo.size
 
         # now get on with testing yaml...

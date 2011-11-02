@@ -38,8 +38,8 @@ The graph for the term is built up (parents) and down (children) as it is reques
 
 Alternatively, if you want to force load the graph (around this term):
 
-  ont.focus_tree_around_me!     # => Will load all parents and children into the graph
-  ont.size                      # => 19
+  ont.focus_graph!  # => Will load all parents and children into the graph
+  ont.size          # => 19
 
 Find out more about your graph:
 

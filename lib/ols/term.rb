@@ -266,22 +266,22 @@ module OLS
       raise TypeError, 'You can only merge in another instance of OLS::Term' unless other_tree.is_a?(OLS::Term)
       raise ArgumentError, 'Unable to merge trees as they do not share the same root' unless self.root.term_id == other_tree.root.term_id
 
-      self.focus_tree_around_me!
-      other_tree.focus_tree_around_me!
+      self.focus_graph!
+      other_tree.focus_graph!
 
       merge_trees( self.root, other_tree.root )
     end
 
-    # Flesh out and focus the ontology tree around this term.
+    # Flesh out and focus the ontology graph around this term.
     #
     # This will fetch all children and parents for this term, and will also trick each 
-    # parent/child object into thinking the ontology tree is fully formed so no further 
+    # parent/child object into thinking the ontology graph is fully formed so no further 
     # requests to OLS will be made (to further flesh out the tree).
     #
     # i.e. This allows us to do the following
     #
     #   e = OLS.find_by_id('EMAP:3018')
-    #   e.focus_tree_around_me!
+    #   e.focus_graph!
     #   e.root.print_tree
     #
     # gives:
@@ -305,8 +305,8 @@ module OLS
     #                       |---+ EMAP:3020
     #                           |---> EMAP:3021
     #
-    # without e.focus_tree_around_me! it would print the *complete* EMAP tree (>13,000 terms).
-    def focus_tree_around_me!
+    # without e.focus_graph! it would print the *complete* EMAP tree (>13,000 terms).
+    def focus_graph!
       self.all_parents.each do |parent|
         parent.lock
       end
