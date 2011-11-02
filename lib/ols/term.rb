@@ -100,12 +100,12 @@ module OLS
         unless response.nil?
           if response[:item].is_a? Array
             response[:item].each do |term|
-              parent = @graph.find(term[:key]) || OLS::Term.new(term[:key],term[:value],@graph)
+              parent = self.find_in_graph(term[:key]) || OLS::Term.new(term[:key],term[:value],@graph)
               self.add_parent(parent)
             end
           else
             term = response[:item]
-            parent = @graph.find(term[:key]) || OLS::Term.new(term[:key],term[:value],@graph)
+            parent = self.find_in_graph(term[:key]) || OLS::Term.new(term[:key],term[:value],@graph)
             self.add_parent(parent)
           end
         end
@@ -113,7 +113,7 @@ module OLS
         @already_fetched_parents = true
       end
 
-      @graph[term_id][:parents].map{ |parent_id| @graph.find(parent_id) }
+      @graph[term_id][:parents].map{ |parent_id| self.find_in_graph(parent_id) }
     end
 
     # Returns an array of all parent term objects for this ontology term
@@ -167,12 +167,12 @@ module OLS
         unless response.nil?
           if response[:item].is_a? Array
             response[:item].each do |term|
-              child = @graph.find(term[:key]) || OLS::Term.new(term[:key],term[:value],@graph)
+              child = self.find_in_graph(term[:key]) || OLS::Term.new(term[:key],term[:value],@graph)
               self.add_child(child)
             end
           else
             term = response[:item]
-            child = @graph.find(term[:key]) || OLS::Term.new(term[:key],term[:value],@graph)
+            child = self.find_in_graph(term[:key]) || OLS::Term.new(term[:key],term[:value],@graph)
             self.add_child(child)
           end
         end
@@ -180,7 +180,7 @@ module OLS
         @already_fetched_children = true
       end
 
-      @graph[term_id][:children].map{ |child_id| @graph.find(child_id) }
+      @graph[term_id][:children].map{ |child_id| self.find_in_graph(child_id) }
     end
 
     # Returns +true+ if the ontology term has any children.
@@ -349,33 +349,59 @@ module OLS
 
     protected
 
+    # Stop this object from trying to fetch up more parent terms from OLS
     def lock_parents
       @already_fetched_parents = true
     end
 
+    # Stop this object from trying to fetch up more child terms from OLS
     def lock_children
       @already_fetched_children = true
     end
 
+    # Stop this object from looking up anymore parent/child terms from OLS
+    #
+    # @see #lock_parents
+    # @see #lock_children
     def lock
       lock_parents
       lock_children
     end
 
+    # Graph access function. Allows you to reset the parentage for a given term.
+    #
+    # @param [Array] parents An array of OLS::Term objects to set as the parents
+    # @raise [ArgumentError] Raised if an Array is not passed
+    # @raise [TypeError] Raised if the parents array does not contain OLS::Term objects
     def parents=(parents)
       raise ArgumentError, "You must pass an array" unless parents.is_a?(Array)
       parents.each { |p| raise TypeError, "You must pass an array of OLS::Term objects" unless p.is_a?(OLS::Term) }
       @graph[self.term_id][:parents] = parents.map(&:term_id)
     end
 
+    # Graph access function. Adds a parent relationship (for this term) to the graph.
+    #
+    # @param [OLS::Term] parent The OLS::Term to add as a parent
+    # @raise [TypeError] Raised if parent is not an OLS::Term object
     def add_parent(parent)
       raise TypeError, "You must pass an OLS::Term object" unless parent.is_a?(OLS::Term)
       @graph.add_relationship(parent,self)
     end
 
+    # Graph access function. Adds a child relationship (for this term) to the graph.
+    #
+    # @param [OLS::Term] child The OLS::Term to add as a child
+    # @raise [TypeError] Raised if child is not an OLS::Term object
     def add_child(child)
       raise TypeError, "You must pass an OLS::Term object" unless child.is_a?(OLS::Term)
       @graph.add_relationship(self,child)
+    end
+
+    # Graph access function. Finds an OLS::Term object in the graph.
+    #
+    # @param [String] term_id The term id to look up
+    def find_in_graph(term_id)
+      @graph.find(term_id)
     end
 
     private
