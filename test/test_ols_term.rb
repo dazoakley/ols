@@ -392,12 +392,12 @@ class OLSTermTest < Test::Unit::TestCase
       end
 
       should 'allow users to write image files showing the graph structure' do
-        @emap_term.focus_graph!
+        @mp_term.focus_graph!
         assert_silent do
-          @emap_term.write_children_to_graphic_file
-          @emap_term.write_parentage_to_graphic_file
+          @mp_term.write_children_to_graphic_file('children')
+          @mp_term.write_parentage_to_graphic_file('parentage')
         end
-        system("rm graph.dot graph.png")
+        system("rm children.dot children.png parentage.dot parentage.png")
       end
 
       should 'allow users to print a tree representation of the graph to STDOUT' do

@@ -386,12 +386,19 @@ module OLS
       dotfile = filename + ".dot"
       imgfile = filename + "." + fmt
 
-      verticies = [ self ] + self.all_children
+      nodes = [ self ] + self.all_children
+      node_ranks = {}
+
+      nodes.each do |node|
+        node_ranks[node.level] ||= []
+        node_ranks[node.level].push(node.term_id.gsub(':',''))
+      end
+
       edges = self.all_children.map do |child|
         child.parents.map { |parent| "    #{parent.term_id} -> #{child.term_id}".gsub(':','') }
       end.flatten.uniq
 
-      write_dot_and_image_file(dotfile,imgfile,fmt,verticies,edges)
+      write_dot_and_image_file(dotfile,imgfile,fmt,nodes,node_ranks,edges)
     end
 
     # Save an image file showing graph structure of all parents for the current term.
@@ -403,12 +410,19 @@ module OLS
       dotfile = filename + ".dot"
       imgfile = filename + "." + fmt
 
-      verticies = self.all_parents + [ self ]
+      nodes = self.all_parents + [ self ]
+      node_ranks = {}
+
+      nodes.each do |node|
+        node_ranks[node.level] ||= []
+        node_ranks[node.level].push(node.term_id.gsub(':',''))
+      end
+
       edges = self.all_parents.map do |parent|
         parent.children.map { |child| "    #{parent.term_id} -> #{child.term_id}".gsub(':','') }
       end.flatten.uniq
 
-      write_dot_and_image_file(dotfile,imgfile,fmt,verticies,edges)
+      write_dot_and_image_file(dotfile,imgfile,fmt,nodes,node_ranks,edges)
     end
 
     # Image drawing utility function.  This is responsible for writing the DOT 
@@ -417,15 +431,17 @@ module OLS
     # @param [String] dotfile The DOT filename
     # @param [String] imgfile The image filename
     # @param [String] fmt The image format to produce - i.e. png or jpg
-    # @param [Array] verticies An array of OLS::Term objects to enter as verticies in the graph
+    # @param [Array] nodes An array of OLS::Term objects to enter as nodes in the graph
+    # @param [Hash] node_ranks A hash of node names grouped by their level
     # @param [Array] edges An array of edge statements already pre-formatted for DOT format
-    def write_dot_and_image_file(dotfile,imgfile,fmt,verticies,edges)
+    def write_dot_and_image_file(dotfile,imgfile,fmt,nodes,node_ranks,edges)
       File.open(dotfile,'w') do |f|
         f << "digraph OntologyTree_#{self.term_id.gsub(':','')} {\n"
-        f << verticies.map { |vert| "    #{vert.term_id.gsub(':','')} [label=\"#{vert.term_id}\"]" }.join("\n")
+        f << nodes.map { |vert| "    #{vert.term_id.gsub(':','')} [label=\"#{vert.term_id}\"]" }.join("\n")
         f << "\n"
         f << edges.join("\n")
         f << "\n"
+        node_ranks.each_value { |nodes| f << "    { rank=same; #{nodes.join(' ')} }\n" }
         f << "}\n"
       end
       system( "dot -T#{fmt} #{dotfile} -o #{imgfile}" )
