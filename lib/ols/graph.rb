@@ -39,6 +39,8 @@ module OLS
       end
     end
 
+    # Accessor for the internal graph hash
+    # TODO: OLS::Term monkeys around with this in a few places - write methods to handle the access needed so we don't have to expose this
     def raw_graph
       @graph
     end
