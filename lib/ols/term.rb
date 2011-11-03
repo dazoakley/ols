@@ -31,7 +31,7 @@ module OLS
     # Object function used by .clone and .dup to create copies of OLS::Term objects.
     def initialize_copy(source)
       super
-      @graph = source.instance_variable_get(:@graph).dup
+      @graph = source.graph.dup
     end
 
     # Is this a root node?
@@ -306,11 +306,16 @@ module OLS
       merge_trees( self.root, other_tree.root )
     end
 
-    # Flesh out and focus the ontology graph around this term.
+    # Flesh out and/or focus the ontology graph around this term.
     #
     # This will fetch all children and parents for this term, and will also trick each 
     # parent/child object into thinking the ontology graph is fully formed so no further 
-    # requests to OLS will be made (to further flesh out the tree).
+    # requests to OLS will be made (to further flesh out the tree).  It will also cut down 
+    # a much larger ontology graph to just focus on the parents/descendants of this term.
+    #
+    # *NOTE:* This method will totally clobber the existing ontology graph that this term 
+    # is part of by removing any term and relationship that is not supposed to be part of this 
+    # focused graph.  Use #focus_graph to pull out a copy and be non-destructive.
     #
     # i.e. This allows us to do the following
     #
@@ -339,16 +344,76 @@ module OLS
     #                       |---+ EMAP:3020
     #                           |---> EMAP:3021
     #
-    # without e.focus_graph! it would print the *complete* EMAP tree (>13,000 terms).
+    # *ALSO NOTE:* without e.focus_graph!, in this case it would print the *complete* EMAP tree (>13,000 terms).
+    #
+    # @see #focus_graph
     def focus_graph!
-      self.all_parents.each do |parent|
-        parent.lock
-      end
+      really_focus_graph_around_term(self)
+    end
 
-      self.all_children.each do |child|
-        child.lock
+    # Flesh out and/or focus the ontology graph around this term.
+    #
+    # This will fetch all children and parents for this term, and will also trick each 
+    # parent/child object into thinking the ontology graph is fully formed so no further 
+    # requests to OLS will be made (to further flesh out the tree).  It will also cut down 
+    # a much larger ontology graph to just focus on the parents/descendants of this term.
+    #
+    # *NOTE:* This method does not affect self.  It returns a completley new OLS::Term 
+    # object containing a completley new internal OLS::Graph.  Use #focus_graph! if you 
+    # wish to cut down the existing graph.
+    #
+    # i.e. This allows us to do the following
+    #
+    #   e = OLS.find_by_id('EMAP:0')
+    #   copy = e['EMAP:2636']['EMAP:2822']['EMAP:2987']['EMAP:3018'].focus_graph
+    #   copy.root.print_tree
+    #
+    # gives:
+    #   * EMAP:0
+    #       |---+ EMAP:2636
+    #           |---+ EMAP:2822
+    #               |---+ EMAP:2987
+    #                   |---+ EMAP:3018
+    #                       |---+ EMAP:3022
+    #                           |---+ EMAP:3023
+    #                               |---+ EMAP:3024
+    #                                   |---> EMAP:3025
+    #                                   |---> EMAP:3026
+    #                               |---+ EMAP:3027
+    #                                   |---> EMAP:3029
+    #                                   |---> EMAP:3028
+    #                               |---+ EMAP:3030
+    #                                   |---> EMAP:3031
+    #                                   |---> EMAP:3032
+    #                       |---> EMAP:3019
+    #                       |---+ EMAP:3020
+    #                           |---> EMAP:3021
+    #
+    # @see #focus_graph!
+    def focus_graph
+      copy = self.dup
+      really_focus_graph_around_term(copy)
+      copy
+    end
+
+    # Utility function for the #focus_graph and #focus_graph! methods.  This does the 
+    # real work of editing the OLS::Graph.
+    #
+    # @param [OLS::Term] term The term (and graph) to focus around
+    def really_focus_graph_around_term(term)
+      term.all_parents.each { |parent| parent.lock }
+      term.all_children.each { |child| child.lock }
+
+      focus_terms = [term.term_id] + term.all_parent_ids + term.all_child_ids
+      graph = term.graph.raw_graph
+
+      graph.delete_if { |key,val| !focus_terms.include?(key) }
+      graph.each do |key,val|
+        val[:parents].delete_if { |elm| !focus_terms.include?(elm) }
+        val[:children].delete_if { |elm| !focus_terms.include?(elm) }
       end
     end
+    private(:really_focus_graph_around_term)
 
     # Returns a copy of this ontology term object with the parents removed.
     #
@@ -450,6 +515,9 @@ module OLS
 
     protected
 
+    # Protected accessor for the term @graph
+    attr_accessor :graph
+
     # Stop this object from trying to fetch up more parent terms from OLS
     def lock_parents
       @already_fetched_parents = true
@@ -539,11 +607,35 @@ module OLS
 
       names_to_merge = names2 - names1
       names_to_merge.each do |name|
-        new_child         = tree2[name].detached_subtree_copy
-        new_child.parents = [ tree1 ]
+        # puts "--- MERGING #{name} INTO #{tree1.term_id} ---"
+        new_child = tree2[name].detached_subtree_copy
+
+        # replace the new_child's graph
+        tree1_graph             = tree1.graph
+        new_child_old_raw_graph = new_child.graph.raw_graph
+        new_child.graph         = tree1_graph
+
+        # insert new_child into the tree1_graph
+        tree1_graph.add_to_graph(new_child)
         tree1.add_child(new_child)
+
+        # add new_child's children into the tree1_graph
+        new_child_old_raw_graph.each do |child_graph_id,child_graph_details|
+          next if tree1_graph.find(child_graph_id)
+          term_to_add = child_graph_details[:object]
+          term_to_add.graph = tree1_graph
+          tree1_graph.add_to_graph(term_to_add)
+        end
+
+        # add the new_child relationships into the tree1_graph
+        new_child_old_raw_graph.each do |child_graph_id,child_graph_details|
+          child_graph_term = tree1_graph.find(child_graph_id)
+          child_graph_details[:parents].each { |parent_id| child_graph_term.add_parent( tree1_graph.find(parent_id) ) }
+          child_graph_details[:children].each { |child_id| child_graph_term.add_child( tree1_graph.find(child_id) ) }
+        end
       end
 
+      # rinse and repeat for the children of tree1
       tree1.children.each do |child|
         merge_trees( child, tree2[child.term_id] ) unless tree2[child.term_id].nil?
         child.lock

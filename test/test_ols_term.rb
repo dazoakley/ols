@@ -170,7 +170,7 @@ class OLSTermTest < Test::Unit::TestCase
         assert_equal 4, @mp_term.level
       end
 
-      should 'be able to "focus" an ontology tree around a given term' do
+      should 'be able to "focus" a empty ontology graph around a given term' do
         # First, test the following EMAP tree...
         #
         # * EMAP:0
@@ -226,6 +226,49 @@ class OLSTermTest < Test::Unit::TestCase
         assert_equal 2, @mp_term.root.children.size
         assert @mp_term.root.children.map(&:term_id).include? 'MP:0005371'
         assert @mp_term.root.children.map(&:term_id).include? 'MP:0005390'
+      end
+
+      should 'be able to "focus" a large pre-populated graph around a single term' do
+        # bulk out the target graph
+        @emap_term.focus_graph!
+        assert_equal 19, @emap_term.size
+
+        # make it a touch larger
+        @emap_term.merge!( OLS.find_by_id('EMAP:3003') )
+        assert_equal 34, @emap_term.size
+
+        # cut it back to the origninal focused graph
+        @emap_term.focus_graph!
+        raw_graph = @emap_term.instance_variable_get(:@graph).raw_graph
+        
+        assert_equal 19, @emap_term.size
+        assert_equal 19, raw_graph.keys.size
+        assert_equal false, raw_graph.keys.include?('EMAP:3003')
+      end
+
+      should 'be able to "focus" a large pre-populated graph around a single term without clobbering the existing graph' do
+        # bulk out the target graph
+        @emap_term.focus_graph!
+        assert_equal 19, @emap_term.size
+
+        # make it a touch larger
+        @emap_term.merge!( OLS.find_by_id('EMAP:3003') )
+        assert_equal 34, @emap_term.size
+
+        # cut it back to the origninal focused graph
+        new_graph = @emap_term.focus_graph
+
+        orig_raw_graph = @emap_term.instance_variable_get(:@graph).raw_graph
+        new_raw_graph  = new_graph.instance_variable_get(:@graph).raw_graph
+        
+        assert_equal 34, @emap_term.size
+        assert_equal 19, new_graph.size
+        
+        assert_equal 34, orig_raw_graph.keys.size
+        assert_equal 19, new_raw_graph.keys.size
+        
+        assert orig_raw_graph.keys.include?('EMAP:3003')
+        assert_equal false, new_raw_graph.keys.include?('EMAP:3003')
       end
 
       should 'be able to merge in another ontology tree that shares a common root term' do
@@ -324,6 +367,12 @@ class OLSTermTest < Test::Unit::TestCase
         assert main_merge_node.children.map(&:term_id).include? 'EMAP:3003'
         assert main_merge_node.children.map(&:term_id).include? 'EMAP:3018'
 
+        # Also check that the internal graph has been merged accordingly
+        raw_graph      = @emap_term.instance_variable_get(:@graph).raw_graph
+        emap3003_graph = raw_graph['EMAP:3003'][:object].instance_variable_get(:@graph).raw_graph
+        assert_equal 34, raw_graph.size
+        assert_equal raw_graph.object_id, emap3003_graph.object_id
+
         another_ont     = OLS.find_by_id('GO:0023034')
         yet_another_ont = OLS.find_by_id('EMAP:3003')
 
@@ -337,6 +386,7 @@ class OLSTermTest < Test::Unit::TestCase
 
         assert @emap_term.object_id != copy.object_id
         assert @emap_term.instance_variable_get(:@graph).object_id != copy.instance_variable_get(:@graph).object_id
+        assert @emap_term.instance_variable_get(:@graph).raw_graph.object_id != copy.instance_variable_get(:@graph).raw_graph.object_id
         assert_equal @emap_term.size, copy.size
         assert_equal @emap_term.root.term_id, copy.root.term_id
       end

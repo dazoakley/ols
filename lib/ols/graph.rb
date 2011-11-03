@@ -7,8 +7,40 @@ module OLS
   #
   # @author Darren Oakley (https://github.com/dazoakley)
   class Graph
+    # Creates a new OLS::Graph object
     def initialize
       @graph = {}
+    end
+
+    # Object function used by .clone and .dup to create copies of OLS::Graph objects.
+    def initialize_copy(source)
+      super
+      @graph = {}
+
+      source.raw_graph.each do |term_id,term_details|
+        old_term = term_details[:object]
+
+        new_term = OLS::Term.new( old_term.term_id, old_term.term_id, self )
+        [
+          :@already_fetched_parents,
+          :@already_fetched_children,
+          :@already_fetched_metadata,
+          :@definition,
+          :@synonyms
+        ].each do |instance_var|
+          new_term.instance_variable_set(instance_var,old_term.instance_variable_get(instance_var))
+        end
+
+        @graph[term_id] = {
+          :object => new_term,
+          :parents => term_details[:parents].dup,
+          :children => term_details[:children].dup
+        }
+      end
+    end
+
+    def raw_graph
+      @graph
     end
 
     # Fetch the object/parents/children hash for a given term.
