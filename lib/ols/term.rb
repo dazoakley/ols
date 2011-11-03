@@ -643,6 +643,5 @@ module OLS
 
       return tree1
     end
-
   end
 end

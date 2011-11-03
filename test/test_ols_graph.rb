@@ -25,7 +25,7 @@ class OLSGraphTest < Test::Unit::TestCase
         @graph.add_to_graph( OLS.find_by_id('EMAP:3018') )
       end
 
-      should 'allow access to the nodes/verticies of the graph' do
+      should 'allow access to the nodes of the graph' do
         assert_nil @graph['EMAP:3018']
         @graph.add_to_graph( OLS.find_by_id('EMAP:3018') )
         assert @graph['EMAP:3018'].is_a? Hash

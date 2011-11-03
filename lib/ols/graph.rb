@@ -88,5 +88,4 @@ module OLS
       @graph[child.term_id][:parents].push(parent.term_id) unless @graph[child.term_id][:parents].include?(parent.term_id)
     end
   end
-
 end
