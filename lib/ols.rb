@@ -146,6 +146,31 @@ module OLS
       @cache = OLS::Cache.new(options)
     end
 
+    # Returns a list of the cached ontologies.
+    #
+    # @return [Array] A list of the cached ontologies
+    def cached_ontologies
+      @cache.cached_ontologies
+    end
+
+    # Add an ontology to the cache.
+    #
+    # @param [String] ontology The ontology to add
+    # @raise [ArgumentError] Raised if the ontology is not part of OLS
+    def add_ontology_to_cache(ontology)
+      @cache.add_ontology_to_cache(ontology)
+    end
+
+    alias :refresh_ontology_in_cache :add_ontology_to_cache
+
+    # Remove an ontology from the cache.
+    #
+    # @param [String] ontology The ontology to remove
+    # @raise [ArgumentError] Raised if the ontology is not part of OLS
+    def remove_ontology_from_cache(ontology)
+      @cache.remove_ontology_from_cache(ontology)
+    end
+
     private
 
     # Helper function to initialize the (Savon) SOAP client

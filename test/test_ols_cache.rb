@@ -3,7 +3,20 @@ require 'test_helper'
 class OLSTermTest < Test::Unit::TestCase
   context 'An OLS::Cache object' do
     setup do
-      OLS.setup_cache({ :directory => "#{File.expand_path(File.dirname(__FILE__))}/fixtures" })
+      @cache_directory = "#{File.expand_path(File.dirname(__FILE__))}/fixtures"
+      OLS.setup_cache({ :directory => @cache_directory })
+
+      if OLS.cached_ontologies.include?('TRANS')
+        Dir.chdir(@cache_directory) do
+          Dir.glob('TRANS*').each do |file|
+            File.delete(file)
+          end
+          File.open('cached_ontologies.yaml','w') do |file|
+            file << { 'EMAP' => ['EMAP0.marshal'], 'MP' => ['MP0000001.marshal'] }.to_yaml
+          end
+        end
+        OLS.setup_cache({ :directory => @cache_directory })
+      end
     end
 
     teardown do
@@ -49,6 +62,44 @@ class OLSTermTest < Test::Unit::TestCase
         assert biological_process.is_root?
         assert_equal false, biological_process.is_leaf?
         assert_equal 28, biological_process.children.size
+      end
+    end
+
+    should 'setup/manage cached objects for the user' do
+      Dir.chdir(@cache_directory) do
+        files = Dir.glob('*')
+        assert files.include?('cached_ontologies.yaml')
+        assert_equal false, files.include?('TRANS0000000.marshal')
+      end
+
+      VCR.use_cassette('test_ols_cache') do
+        # list cached ontologies
+        assert OLS.cached_ontologies.is_a? Array
+        assert OLS.cached_ontologies.include? 'EMAP'
+        assert OLS.cached_ontologies.include? 'MP'
+
+        # add a new ontology to the cache
+        assert OLS.ontologies.keys.include? 'TRANS'
+        OLS.add_ontology_to_cache('TRANS')
+        assert OLS.cached_ontologies.include? 'TRANS'
+
+        Dir.chdir(@cache_directory) do
+          files = Dir.glob('*')
+          assert files.include?('TRANS0000000.marshal')
+        end
+      end
+
+      trans = OLS.find_by_id('TRANS:0000000')
+      assert_equal 25, trans.size
+
+      VCR.use_cassette('test_ols_cache') do
+        # remove an ontology from the cache
+        OLS.remove_ontology_from_cache('TRANS')
+        assert_equal false, OLS.cached_ontologies.include?('TRANS')
+        Dir.chdir(@cache_directory) do
+          files = Dir.glob('*')
+          assert_equal false, files.include?('TRANS0000000.marshal')
+        end
       end
     end
   end
