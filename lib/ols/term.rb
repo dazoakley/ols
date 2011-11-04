@@ -79,14 +79,14 @@ module OLS
       "#{@term_id} - #{@term_name}"
     end
 
-    # Returns the size of the full ontology tree.
+    # Returns the size of the full ontology graph.
     #
-    # @return [Integer] The size of the full ontology tree
+    # @return [Integer] The size of the full ontology graph
     def size
       self.root.all_children.size + 1
     end
 
-    # Returns depth of this term in its ontology tree.  Depth of a node is defined as:
+    # Returns depth of this term in its ontology graph.  Depth of a node is defined as:
     #
     # Depth:: Length of the terms path to its root.  Depth of a root term is zero.
     #
@@ -290,27 +290,27 @@ module OLS
     alias :all_child_term_ids :all_child_ids
     alias :all_child_term_names :all_child_names
 
-    # Merge in another ontology tree that shares the same root. Duplicate nodes (coming from
-    # other_tree) will NOT be overwritten in self.
+    # Merge in another ontology graph that shares the same root. Duplicate nodes (coming from
+    # other_graph) will NOT be overwritten in self.
     #
-    # @param [OLS::Term] other_tree The other tree to merge with.
-    # @raise [TypeError] This exception is raised if other_tree is not a OLS::Term.
-    # @raise [ArgumentError] This exception is raised if other_tree does not have the same root as self.
-    def merge!( other_tree )
-      raise TypeError, 'You can only merge in another instance of OLS::Term' unless other_tree.is_a?(OLS::Term)
-      raise ArgumentError, 'Unable to merge trees as they do not share the same root' unless self.root.term_id == other_tree.root.term_id
+    # @param [OLS::Term] other_graph The other graph to merge with.
+    # @raise [TypeError] This exception is raised if other_graph is not a OLS::Term.
+    # @raise [ArgumentError] This exception is raised if other_graph does not have the same root as self.
+    def merge!( other_graph )
+      raise TypeError, 'You can only merge in another instance of OLS::Term' unless other_graph.is_a?(OLS::Term)
+      raise ArgumentError, 'Unable to merge graphs as they do not share the same root' unless self.root.term_id == other_graph.root.term_id
 
       self.focus_graph!
-      other_tree.focus_graph!
+      other_graph.focus_graph!
 
-      merge_trees( self.root, other_tree.root )
+      merge_graphs( self.root, other_graph.root )
     end
 
     # Flesh out and/or focus the ontology graph around this term.
     #
     # This will fetch all children and parents for this term, and will also trick each 
     # parent/child object into thinking the ontology graph is fully formed so no further 
-    # requests to OLS will be made (to further flesh out the tree).  It will also cut down 
+    # requests to OLS will be made (to further flesh out the graph).  It will also cut down 
     # a much larger ontology graph to just focus on the parents/descendants of this term.
     #
     # *NOTE:* This method will totally clobber the existing ontology graph that this term 
@@ -321,7 +321,7 @@ module OLS
     #
     #   e = OLS.find_by_id('EMAP:3018')
     #   e.focus_graph!
-    #   e.root.print_tree
+    #   e.root.print_graph
     #
     # gives:
     #   * EMAP:0
@@ -344,7 +344,7 @@ module OLS
     #                       |---+ EMAP:3020
     #                           |---> EMAP:3021
     #
-    # *ALSO NOTE:* without e.focus_graph!, in this case it would print the *complete* EMAP tree (>13,000 terms).
+    # *ALSO NOTE:* without e.focus_graph!, in this case it would print the *complete* EMAP graph (>13,000 terms).
     #
     # @see #focus_graph
     def focus_graph!
@@ -355,7 +355,7 @@ module OLS
     #
     # This will fetch all children and parents for this term, and will also trick each 
     # parent/child object into thinking the ontology graph is fully formed so no further 
-    # requests to OLS will be made (to further flesh out the tree).  It will also cut down 
+    # requests to OLS will be made (to further flesh out the graph).  It will also cut down 
     # a much larger ontology graph to just focus on the parents/descendants of this term.
     #
     # *NOTE:* This method does not affect self.  It returns a completley new OLS::Term 
@@ -366,7 +366,7 @@ module OLS
     #
     #   e = OLS.find_by_id('EMAP:0')
     #   copy = e['EMAP:2636']['EMAP:2822']['EMAP:2987']['EMAP:3018'].focus_graph
-    #   copy.root.print_tree
+    #   copy.root.print_graph
     #
     # gives:
     #   * EMAP:0
@@ -418,17 +418,17 @@ module OLS
     # Returns a copy of this ontology term object with the parents removed.
     #
     # @return [OLS::Term] A copy of this ontology term object with the parents removed
-    def detached_subtree_copy
+    def detached_subgraph_copy
       copy = self.dup
       copy.parents = []
       copy.lock_parents
       copy
     end
 
-    # Pretty prints the (sub)tree rooted at this ontology term.
+    # Pretty prints the (sub)graph rooted at this ontology term.
     #
     # @param [Number] level The indentation level (4 spaces) to start with.
-    def print_tree(level=1)
+    def print_graph(level=1)
       if is_root?
         print "*"
       else
@@ -439,7 +439,7 @@ module OLS
 
       puts " #{self.term_id}"
 
-      self.children.each { |child| child.print_tree(level + 1)}
+      self.children.each { |child| child.print_graph(level + 1)}
     end
 
     # Save an image file showing graph structure of all children from the current term.
@@ -596,52 +596,52 @@ module OLS
       end
     end
 
-    # Utility function to recursivley merge two ontology (sub)trees.
+    # Utility function to recursivley merge two ontology (sub)graphs.
     #
-    # @param [OLS::Term] tree1 The target ontology tree to merge into.
-    # @param [OLS::Term] tree2 The donor ontology tree (that will be merged into target).
-    # @return [OLS::Term] The merged ontology tree.
-    def merge_trees( tree1, tree2 )
-      names1 = tree1.children.map(&:term_id)
-      names2 = tree2.children.map(&:term_id)
+    # @param [OLS::Term] graph1 The target ontology graph to merge into.
+    # @param [OLS::Term] graph2 The donor ontology graph (that will be merged into target).
+    # @return [OLS::Term] The merged ontology graph.
+    def merge_graphs( graph1, graph2 )
+      names1 = graph1.children.map(&:term_id)
+      names2 = graph2.children.map(&:term_id)
 
       names_to_merge = names2 - names1
       names_to_merge.each do |name|
-        # puts "--- MERGING #{name} INTO #{tree1.term_id} ---"
-        new_child = tree2[name].detached_subtree_copy
+        # puts "--- MERGING #{name} INTO #{graph1.term_id} ---"
+        new_child = graph2[name].detached_subgraph_copy
 
         # replace the new_child's graph
-        tree1_graph             = tree1.graph
+        graph1_graph             = graph1.graph
         new_child_old_raw_graph = new_child.graph.raw_graph
-        new_child.graph         = tree1_graph
+        new_child.graph         = graph1_graph
 
-        # insert new_child into the tree1_graph
-        tree1_graph.add_to_graph(new_child)
-        tree1.add_child(new_child)
+        # insert new_child into the graph1_graph
+        graph1_graph.add_to_graph(new_child)
+        graph1.add_child(new_child)
 
-        # add new_child's children into the tree1_graph
+        # add new_child's children into the graph1_graph
         new_child_old_raw_graph.each do |child_graph_id,child_graph_details|
-          next if tree1_graph.find(child_graph_id)
+          next if graph1_graph.find(child_graph_id)
           term_to_add = child_graph_details[:object]
-          term_to_add.graph = tree1_graph
-          tree1_graph.add_to_graph(term_to_add)
+          term_to_add.graph = graph1_graph
+          graph1_graph.add_to_graph(term_to_add)
         end
 
-        # add the new_child relationships into the tree1_graph
+        # add the new_child relationships into the graph1_graph
         new_child_old_raw_graph.each do |child_graph_id,child_graph_details|
-          child_graph_term = tree1_graph.find(child_graph_id)
-          child_graph_details[:parents].each { |parent_id| child_graph_term.add_parent( tree1_graph.find(parent_id) ) }
-          child_graph_details[:children].each { |child_id| child_graph_term.add_child( tree1_graph.find(child_id) ) }
+          child_graph_term = graph1_graph.find(child_graph_id)
+          child_graph_details[:parents].each { |parent_id| child_graph_term.add_parent( graph1_graph.find(parent_id) ) }
+          child_graph_details[:children].each { |child_id| child_graph_term.add_child( graph1_graph.find(child_id) ) }
         end
       end
 
-      # rinse and repeat for the children of tree1
-      tree1.children.each do |child|
-        merge_trees( child, tree2[child.term_id] ) unless tree2[child.term_id].nil?
+      # rinse and repeat for the children of graph1
+      graph1.children.each do |child|
+        merge_graphs( child, graph2[child.term_id] ) unless graph2[child.term_id].nil?
         child.lock
       end
 
-      return tree1
+      return graph1
     end
   end
 end

@@ -171,7 +171,7 @@ class OLSTermTest < Test::Unit::TestCase
       end
 
       should 'be able to "focus" a empty ontology graph around a given term' do
-        # First, test the following EMAP tree...
+        # First, test the following EMAP graph...
         #
         # * EMAP:0
         #     |---+ EMAP:2636
@@ -206,7 +206,7 @@ class OLSTermTest < Test::Unit::TestCase
         assert @emap_term.root.instance_variable_get :@already_fetched_parents
         assert @emap_term.root.instance_variable_get :@already_fetched_children
 
-        # Now test the following MP tree...
+        # Now test the following MP graph...
         #
         # * MP:0000001
         #     |---+ MP:0005371
@@ -271,8 +271,8 @@ class OLSTermTest < Test::Unit::TestCase
         assert_equal false, new_raw_graph.keys.include?('EMAP:3003')
       end
 
-      should 'be able to merge in another ontology tree that shares a common root term' do
-        # We're going to try and merge this subtree (for EMAP:3018)
+      should 'be able to merge in another ontology graph that shares a common root term' do
+        # We're going to try and merge this subgraph (for EMAP:3018)
         #
         # * EMAP:0
         #     |---+ EMAP:2636
@@ -450,9 +450,9 @@ class OLSTermTest < Test::Unit::TestCase
         system("rm children.dot children.png parentage.dot parentage.png")
       end
 
-      should 'allow users to print a tree representation of the graph to STDOUT' do
+      should 'allow users to print a graph representation of the graph to STDOUT' do
         @emap_term.focus_graph!
-        emap_tree = <<-EMAP
+        emap_graph = <<-EMAP
 * EMAP:0
     |---+ EMAP:2636
         |---+ EMAP:2822
@@ -474,8 +474,8 @@ class OLSTermTest < Test::Unit::TestCase
                         |---> EMAP:3021
 EMAP
 
-        assert_output(emap_tree.lstrip,nil) do
-          @emap_term.root.print_tree
+        assert_output(emap_graph.lstrip,nil) do
+          @emap_term.root.print_graph
         end
       end
     end
