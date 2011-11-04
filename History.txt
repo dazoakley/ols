@@ -1,8 +1,8 @@
-=== 0.1.0 ....
+=== 0.1.0 2011-11-04
 
-* Total rewrite...
-  * Switch to using the OLS SOAP service
-  * Remove the use of RubyTree as not all ontologies are trees
+* Total rewrite (as a result please note API changes)...
+  * Switch to using the OLS SOAP service instead of local MySQL instance
+  * Remove the use of RubyTree as ontologies are Directed Acyclic Graphs (DAGs), not trees
 
 === 0.0.1 2011-04-15
 
