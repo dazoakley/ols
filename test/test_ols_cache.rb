@@ -3,12 +3,17 @@ require 'test_helper'
 class OLSTermTest < Test::Unit::TestCase
   context 'An OLS::Cache object' do
     setup do
-      OLS.use_cache({ :directory => "#{File.expand_path(File.dirname(__FILE__))}/fixtures" })
+      OLS.setup_cache({ :directory => "#{File.expand_path(File.dirname(__FILE__))}/fixtures" })
+    end
+
+    teardown do
+      OLS.instance_variable_set(:@cache,nil)
     end
 
     should 'read in a fixture/cache directory of marshalled objects upon initialisation' do
       cache = OLS.instance_variable_get(:@cache)
       assert cache.is_a? OLS::Cache
+      assert OLS.using_cache?
       assert cache.instance_variable_get(:@term_id_to_files).size > 10000
     end
 

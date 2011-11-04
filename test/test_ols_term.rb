@@ -397,9 +397,7 @@ class OLSTermTest < Test::Unit::TestCase
         OLS.stubs(:request).returns(nil)
 
         # check the stubbing is okay...
-        foo = OLS.find_by_id('EMAP:3003')
-        foo.focus_graph!
-        assert_equal 1, foo.size
+        assert_raise(ArgumentError) { foo = OLS.find_by_id('EMAP:3003') }
 
         # now get on with testing marshal...
         data = Marshal.dump(@emap_term)
@@ -423,9 +421,7 @@ class OLSTermTest < Test::Unit::TestCase
         require 'yaml'
 
         # check the stubbing is okay...
-        foo = OLS.find_by_id('EMAP:3003')
-        foo.focus_graph!
-        assert_equal 1, foo.size
+        assert_raise(ArgumentError) { foo = OLS.find_by_id('EMAP:3003') }
 
         # now get on with testing yaml...
         data = @emap_term.to_yaml

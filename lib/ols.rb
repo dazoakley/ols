@@ -82,17 +82,23 @@ module OLS
     # @return [OLS::Term] An OLS::Term object for the requested ontology id
     # @raise OLS::TermNotFoundError Raised if the requested ontology id cannot be found
     def find_by_id(term_id)
-      term_name = request(:get_term_by_id) { soap.body = { :termId => term_id } }
-      raise TermNotFoundError if term_name.eql?(term_id)
-      OLS::Term.new(term_id,term_name)
+      term = nil
+
+      term = @cache.find_by_id(term_id) if using_cache?
+
+      if term.nil?
+        term_name = request(:get_term_by_id) { soap.body = { :termId => term_id } }
+        raise TermNotFoundError if term_name.eql?(term_id)
+        term = OLS::Term.new(term_id,term_name)
+      end
+
+      term
     end
 
     # Set whether to log HTTP requests - pass in +true+ or +false+
     attr_writer :log
 
     # Returns whether to log HTTP/SOAP requests. Defaults to +false+
-    #
-    # @return [Boolean] To log or not to log, that is the question...
     def log?
       @log ? true : false
     end
@@ -119,6 +125,25 @@ module OLS
     # Returns a HTTP proxy url.  Will read the +http_proxy+ environment variable if present
     def proxy
       @proxy ||= ( ENV['http_proxy'] || ENV['HTTP_PROXY'] )
+    end
+
+    # Are we using a local cache? Defaults to +false+.
+    # @see #setup_cache
+    def using_cache?
+      @cache ? true : false
+    end
+
+    # Configure the OLS gem to use a local cache. Useful if you have some serious ontology
+    # activity going on, or you want to insulate yourself from server outages and the like.
+    #
+    # *NOTE:* We only support a file-based (on-disk) cache at the moment. By default it will
+    # look in/use the current working directory, or you can pass a configuration hash as follows:
+    #
+    #   OLS.setup_cache({ :directory => '/path/to/cache_directory' })
+    #
+    # Support for other cache backends will come in future builds.
+    def setup_cache(options={})
+      @cache = OLS::Cache.new(options)
     end
 
     private

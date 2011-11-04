@@ -13,6 +13,9 @@ module OLS
     # @param [String] term_id The ontology term id
     # @param [String] term_name The ontology term name
     def initialize(term_id,term_name,graph=nil)
+      raise ArgumentError, "term_id cannot be empty/nil" if term_id.nil? || term_id =~ /^\s$/
+      raise ArgumentError, "term_name cannot be empty/nil" if term_name.nil? || term_name =~ /^\s$/
+
       @term_id   = term_id
       @term_name = term_name
 

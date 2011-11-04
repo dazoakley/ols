@@ -3,7 +3,8 @@
 module OLS
 
   # Utility class for representing an ontology graph. You should *NOT* really interact with
-  # instances of this class directly, use OLS.find_by_id etc.
+  # instances of this class directly, use the methods on the OLS module and the resulting 
+  # OLS::Term objects.
   #
   # @author Darren Oakley (https://github.com/dazoakley)
   class Graph
