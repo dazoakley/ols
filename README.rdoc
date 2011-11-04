@@ -51,7 +51,7 @@ Find out more about your graph:
 
 Visualise your graph (useful for exploring):
 
-  ont.root.print_tree
+  ont.root.print_graph
 
   # Gives the following:
   #
