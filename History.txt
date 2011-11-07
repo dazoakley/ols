@@ -1,3 +1,7 @@
+=== 0.2.1 2011-11-07
+
+* Cache bugfix.  Removed the use of 'Dir.chdir' as it was firing warnings.
+
 === 0.2.0 2011-11-07
 
 * Addition of a basic cache layer. Users can now cache regularly used ontologies on disk.
