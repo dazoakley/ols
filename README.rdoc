@@ -22,24 +22,24 @@ Then, to lookup an ontology term:
   
 This will create a simple tree object for the EMAP term EMAP:3018
   
-  ont.term_id       # => "EMAP:3018"
-  ont.term_name     # => "TS18,nose"
+  ont.term_id             # => "EMAP:3018"
+  ont.term_name           # => "TS18,nose"
 
 Find out about your ontology term
 
-  ont.is_root?      # => false
-  ont.is_leaf?      # => false
-  ont.to_s          # => "EMAP:3018 - TS18,nose"
+  ont.is_root?            # => false
+  ont.is_leaf?            # => false
+  ont.to_s                # => "EMAP:3018 - TS18,nose"
 
 The graph for the term is built up (parents) and down (children) as it is requested:
 
-  ont.parents       # => Array of all parent terms objects
-  ont.children      # => Array of all direct child term objects
+  ont.parents             # => Array of all parent terms objects
+  ont.children            # => Array of all direct child term objects
 
 Alternatively, if you want to force load the graph (around this term):
 
-  ont.focus_graph!  # => Will load all parents and children into the graph
-  ont.size          # => 19
+  ont.focus_graph!        # => Will load all parents and children into the graph
+  ont.size                # => 19
 
 Find out more about your graph:
 
@@ -75,6 +75,43 @@ Visualise your graph (useful for exploring):
   #                     |---+ EMAP:3020
   #                         |---> EMAP:3021
   #
+
+More documentation can be found on the OLS module and OLS::Term rdoc pages.
+
+== Advanced Usage
+
+More to come...
+
+== Caching
+
+If you regularly hit up one or more ontology with lots of queries it might be in
+your interest to store a local on-disk copy of the entire ontology graph.  This
+will protect you against network problems and will stop you hitting OLS with many
+repeated service calls.
+
+The OLS gem has a basic caching layer built into it that allows you to store the
+entire graph for your most used ontologies on disk.  To setup/invoke the cache, do
+the following:
+
+  OLS.setup_cache({ :directory => '/tmp/ols_cache' })
+
+This will create a cache directory (/tmp/ols_cache) if it does not exist, or read in
+configuration files etc if it is an already existing OLS cache directory. If you do not
+pass in a configuration hash it will use the current working directory by default.
+
+Now, to add an ontology to the cache, you do the following:
+
+  OLS.add_ontology_to_cache("EMAP")
+
+This will add the entire EMAP ontology graph to the cache (this will take a while) - now
+all calls for EMAP terms will go via the cache, all other queries will still call the OLS web
+services.  (There is no dynamic cache build-up over time).
+
+To remove an ontology graph from the cache:
+
+  OLS.remove_ontology_from_cache("EMAP")
+
+Different cache back-ends and other features will be built into future releases.
 
 == Meta
 

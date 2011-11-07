@@ -102,6 +102,7 @@ module OLS
       @cached_ontologies = {}
       @term_id_to_files = {}
 
+      Dir.mkdir(@cache_directory) unless Dir.exists?(@cache_directory)
       Dir.chdir(@cache_directory) do
         @cached_ontologies = YAML.load( File.open('cached_ontologies.yaml') ) if File.exists?('cached_ontologies.yaml')
 

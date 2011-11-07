@@ -129,6 +129,7 @@ module OLS
 
     # Are we using a local cache? Defaults to +false+.
     # @see #setup_cache
+    # @since 0.2.0
     def using_cache?
       @cache ? true : false
     end
@@ -142,6 +143,8 @@ module OLS
     #   OLS.setup_cache({ :directory => '/path/to/cache_directory' })
     #
     # Support for other cache backends will come in future builds.
+    #
+    # @since 0.2.0
     def setup_cache(options={})
       @cache = OLS::Cache.new(options)
     end
@@ -149,6 +152,7 @@ module OLS
     # Returns a list of the cached ontologies.
     #
     # @return [Array] A list of the cached ontologies
+    # @since 0.2.0
     def cached_ontologies
       @cache.cached_ontologies
     end
@@ -157,6 +161,7 @@ module OLS
     #
     # @param [String] ontology The ontology to add
     # @raise [ArgumentError] Raised if the ontology is not part of OLS
+    # @since 0.2.0
     def add_ontology_to_cache(ontology)
       @cache.add_ontology_to_cache(ontology)
     end
@@ -167,6 +172,7 @@ module OLS
     #
     # @param [String] ontology The ontology to remove
     # @raise [ArgumentError] Raised if the ontology is not part of OLS
+    # @since 0.2.0
     def remove_ontology_from_cache(ontology)
       @cache.remove_ontology_from_cache(ontology)
     end
