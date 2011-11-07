@@ -12,6 +12,7 @@ module OLS
     def initialize(args={})
       options = { :directory => Dir.getwd }.merge(args)
       @cache_directory = options[:directory]
+      @cache_directory.sub!(/\/$/,'')
 
       prepare_cache
     end
@@ -25,10 +26,8 @@ module OLS
       filename = @term_id_to_files[term_id].to_s
 
       unless filename.nil? || filename.empty?
-        Dir.chdir(@cache_directory) do
-          root_term = Marshal.load( File.open(filename) )
-          found_term = root_term.send(:find_in_graph,term_id)
-        end
+        root_term = Marshal.load( File.open("#{@cache_directory}/#{filename}") )
+        found_term = root_term.send(:find_in_graph,term_id)
       end
 
       found_term
@@ -50,17 +49,14 @@ module OLS
 
       new_filenames = []
 
-      Dir.chdir(@cache_directory) do
-        OLS.root_terms(ontology).each do |term|
-          term_filename = "#{term.term_id.gsub(':','')}.marshal"
-          term.focus_graph!
-          File.open("#{term_filename}",'w') { |f| f << Marshal.dump(term) }
-          @cached_ontologies[ontology] ||= { :filenames => [], :date => Date.today }
-          @cached_ontologies[ontology][:filenames].push(term_filename) unless @cached_ontologies[ontology][:filenames].include? term_filename
-          new_filenames.push(term_filename)
-        end
+     OLS.root_terms(ontology).each do |term|
+        term_filename = "#{term.term_id.gsub(':','')}.marshal"
+        term.focus_graph!
+        File.open("#{@cache_directory}/#{term_filename}",'w') { |f| f << Marshal.dump(term) }
+        @cached_ontologies[ontology] ||= { :filenames => [], :date => Date.today }
+        @cached_ontologies[ontology][:filenames].push(term_filename) unless @cached_ontologies[ontology][:filenames].include? term_filename
+        new_filenames.push(term_filename)
       end
-
       @cached_ontologies[ontology][:filenames].delete_if { |file| !new_filenames.include?(file) }
 
       write_cached_ontologies_to_disk
@@ -76,10 +72,8 @@ module OLS
     def remove_ontology_from_cache(ontology)
       raise ArgumentError, "'#{ontology}' is not part of the cache" unless OLS.ontologies.include?(ontology)
 
-      Dir.chdir(@cache_directory) do
-        @cached_ontologies[ontology][:filenames].each do |file|
-          File.delete(file)
-        end
+      @cached_ontologies[ontology][:filenames].each do |file|
+        File.delete("#{@cache_directory}/#{file}")
       end
 
       @cached_ontologies.delete(ontology)
@@ -92,9 +86,7 @@ module OLS
 
     # writes the @cached_ontologies variable to disk
     def write_cached_ontologies_to_disk
-      Dir.chdir(@cache_directory) do
-        File.open('cached_ontologies.yaml','w') { |f| f << @cached_ontologies.to_yaml }
-      end
+      File.open("#{@cache_directory}/cached_ontologies.yaml",'w') { |f| f << @cached_ontologies.to_yaml }
     end
 
     # Utility function to prepare the cache.
@@ -103,18 +95,18 @@ module OLS
       @term_id_to_files = {}
 
       Dir.mkdir(@cache_directory) unless Dir.exists?(@cache_directory)
-      Dir.chdir(@cache_directory) do
-        @cached_ontologies = YAML.load( File.open('cached_ontologies.yaml') ) if File.exists?('cached_ontologies.yaml')
 
-        @cached_ontologies.each do |ontology,details|
-          details[:filenames].each do |filename|
-            root_term = Marshal.load( File.open(filename) )
-            next unless root_term.is_a? OLS::Term
-            @term_id_to_files[ root_term.term_id ] = filename.to_sym
-            root_term.all_child_ids.each { |term_id| @term_id_to_files[term_id] = filename.to_sym }
-          end
+      @cached_ontologies = YAML.load( File.open("#{@cache_directory}/cached_ontologies.yaml") ) if File.exists?("#{@cache_directory}/cached_ontologies.yaml")
+
+      @cached_ontologies.each do |ontology,details|
+        details[:filenames].each do |filename|
+          root_term = Marshal.load( File.open("#{@cache_directory}/#{filename}") )
+          next unless root_term.is_a? OLS::Term
+          @term_id_to_files[ root_term.term_id ] = filename.to_sym
+          root_term.all_child_ids.each { |term_id| @term_id_to_files[term_id] = filename.to_sym }
         end
       end
     end
   end
 end
+
