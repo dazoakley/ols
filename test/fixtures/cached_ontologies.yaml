@@ -1,5 +1,9 @@
 ---
 EMAP:
-- EMAP0.marshal
+  :filenames:
+  - EMAP0.marshal
+  :date: 2011-11-07
 MP:
-- MP0000001.marshal
+  :filenames:
+  - MP0000001.marshal
+  :date: 2011-11-07

@@ -55,13 +55,13 @@ module OLS
           term_filename = "#{term.term_id.gsub(':','')}.marshal"
           term.focus_graph!
           File.open("#{term_filename}",'w') { |f| f << Marshal.dump(term) }
-          @cached_ontologies[ontology] ||= []
-          @cached_ontologies[ontology].push(term_filename) unless @cached_ontologies[ontology].include? term_filename
+          @cached_ontologies[ontology] ||= { :filenames => [], :date => Date.today }
+          @cached_ontologies[ontology][:filenames].push(term_filename) unless @cached_ontologies[ontology][:filenames].include? term_filename
           new_filenames.push(term_filename)
         end
       end
 
-      @cached_ontologies[ontology].delete_if { |file| !new_filenames.include?(file) }
+      @cached_ontologies[ontology][:filenames].delete_if { |file| !new_filenames.include?(file) }
 
       write_cached_ontologies_to_disk
       prepare_cache
@@ -77,7 +77,7 @@ module OLS
       raise ArgumentError, "'#{ontology}' is not part of the cache" unless OLS.ontologies.include?(ontology)
 
       Dir.chdir(@cache_directory) do
-        @cached_ontologies[ontology].each do |file|
+        @cached_ontologies[ontology][:filenames].each do |file|
           File.delete(file)
         end
       end
@@ -105,8 +105,8 @@ module OLS
       Dir.chdir(@cache_directory) do
         @cached_ontologies = YAML.load( File.open('cached_ontologies.yaml') ) if File.exists?('cached_ontologies.yaml')
 
-        @cached_ontologies.each do |ontology,filenames|
-          filenames.each do |filename|
+        @cached_ontologies.each do |ontology,details|
+          details[:filenames].each do |filename|
             root_term = Marshal.load( File.open(filename) )
             next unless root_term.is_a? OLS::Term
             @term_id_to_files[ root_term.term_id ] = filename.to_sym
