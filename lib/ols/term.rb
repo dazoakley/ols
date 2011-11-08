@@ -82,11 +82,11 @@ module OLS
       "#{@term_id} - #{@term_name}"
     end
 
-    # Returns the size of the full ontology graph.
+    # Returns the size of the full ontology graph (unique nodes).
     #
-    # @return [Integer] The size of the full ontology graph
+    # @return [Integer] The size of the full ontology graph (unique nodes)
     def size
-      self.root.all_children.size + 1
+      self.root.all_children.uniq.size + 1
     end
 
     # Returns depth of this term in its ontology graph.  Depth of a node is defined as:
