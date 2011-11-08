@@ -240,7 +240,7 @@ class OLSTermTest < Test::Unit::TestCase
         # cut it back to the origninal focused graph
         @emap_term.focus_graph!
         raw_graph = @emap_term.instance_variable_get(:@graph).raw_graph
-        
+
         assert_equal 19, @emap_term.size
         assert_equal 19, raw_graph.keys.size
         assert_equal false, raw_graph.keys.include?('EMAP:3003')
@@ -260,15 +260,83 @@ class OLSTermTest < Test::Unit::TestCase
 
         orig_raw_graph = @emap_term.instance_variable_get(:@graph).raw_graph
         new_raw_graph  = new_graph.instance_variable_get(:@graph).raw_graph
-        
+
         assert_equal 34, @emap_term.size
         assert_equal 19, new_graph.size
-        
+
         assert_equal 34, orig_raw_graph.keys.size
         assert_equal 19, new_raw_graph.keys.size
-        
+
         assert orig_raw_graph.keys.include?('EMAP:3003')
         assert_equal false, new_raw_graph.keys.include?('EMAP:3003')
+      end
+
+      should 'be able to "detach" the graph to be able to retain just parents' do
+        # We expect the following here...
+        #
+        # * EMAP:0
+        #     |---+ EMAP:2636
+        #         |---+ EMAP:2822
+        #             |---+ EMAP:2987
+        #                 |---+ EMAP:3018
+
+        @emap_term.focus_graph!
+        @emap_term.detach_parents!
+
+        assert_equal 'EMAP:3018', @emap_term.term_id
+        assert_equal 'EMAP:0', @emap_term.root.term_id
+        assert_equal 5, @emap_term.size
+        assert_equal 5, @emap_term.instance_variable_get(:@graph).raw_graph.size
+
+        # Test the copy variant of this function
+        @mp_term.focus_graph!
+        new_term = @mp_term.detach_parents
+
+        assert new_term.object_id != @mp_term.object_id
+        assert new_term.is_leaf?
+        assert_equal 'MP:0000001', new_term.root.term_id
+        assert_equal 7, new_term.size
+        assert_equal 7, new_term.instance_variable_get(:@graph).raw_graph.size
+        assert_equal 102, @mp_term.size
+        assert_equal 102, @mp_term.instance_variable_get(:@graph).raw_graph.size
+      end
+
+      should 'be able to "detach" the graph to be able to retain just children' do
+        # We expect the following here...
+        #
+        # |---+ EMAP:3018
+        #     |---+ EMAP:3022
+        #         |---+ EMAP:3023
+        #             |---+ EMAP:3024
+        #                 |---> EMAP:3025
+        #                 |---> EMAP:3026
+        #             |---+ EMAP:3027
+        #                 |---> EMAP:3029
+        #                 |---> EMAP:3028
+        #             |---+ EMAP:3030
+        #                 |---> EMAP:3031
+        #                 |---> EMAP:3032
+        #     |---> EMAP:3019
+        #     |---+ EMAP:3020
+        #         |---> EMAP:3021
+
+        @emap_term.focus_graph!
+        @emap_term.detach_children!
+
+        assert_equal 'EMAP:3018', @emap_term.term_id
+        assert @emap_term.is_root?
+        assert_equal 15, @emap_term.size
+        assert_equal 15, @emap_term.instance_variable_get(:@graph).raw_graph.size
+
+        # Test the copy variant of this function
+        @mp_term.focus_graph!
+        new_term = @mp_term.detach_children
+
+        assert new_term.object_id != @mp_term.object_id
+        assert_equal 96, new_term.size
+        assert_equal 96, new_term.instance_variable_get(:@graph).raw_graph.size
+        assert_equal 102, @mp_term.size
+        assert_equal 102, @mp_term.instance_variable_get(:@graph).raw_graph.size
       end
 
       should 'be able to merge in another ontology graph that shares a common root term' do

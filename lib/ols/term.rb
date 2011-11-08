@@ -351,7 +351,7 @@ module OLS
     #
     # @see #focus_graph
     def focus_graph!
-      really_focus_graph_around_term(self)
+      self.really_focus_graph_around_term!
     end
 
     # Flesh out and/or focus the ontology graph around this term.
@@ -395,36 +395,47 @@ module OLS
     # @see #focus_graph!
     def focus_graph
       copy = self.dup
-      really_focus_graph_around_term(copy)
+      copy.really_focus_graph_around_term!
       copy
     end
 
-    # Utility function for the #focus_graph and #focus_graph! methods.  This does the 
-    # real work of editing the OLS::Graph.
+    # Remove the children from this ontology graph.
     #
-    # @param [OLS::Term] term The term (and graph) to focus around
-    def really_focus_graph_around_term(term)
-      term.all_parents.each { |parent| parent.lock }
-      term.all_children.each { |child| child.lock }
-
-      focus_terms = [term.term_id] + term.all_parent_ids + term.all_child_ids
-      graph = term.graph.raw_graph
-
-      graph.delete_if { |key,val| !focus_terms.include?(key) }
-      graph.each do |key,val|
-        val[:parents].delete_if { |elm| !focus_terms.include?(elm) }
-        val[:children].delete_if { |elm| !focus_terms.include?(elm) }
-      end
+    # @see #detach_parents
+    # @since 0.3.0
+    def detach_parents!
+      self.really_detach_parents!
     end
-    private(:really_focus_graph_around_term)
+
+    # Returns a copy of this ontology term object with the children removed.
+    #
+    # @return [OLS::Term] A copy of this term with the children removed
+    #
+    # @see #detach_parents!
+    # @since 0.3.0
+    def detach_parents
+      copy = self.dup
+      copy.really_detach_parents!
+      copy
+    end
+
+    # Removes the parents from this ontology graph.
+    #
+    # @see #detach_children
+    # @since 0.3.0
+    def detach_children!
+      self.really_detach_children!
+    end
 
     # Returns a copy of this ontology term object with the parents removed.
     #
-    # @return [OLS::Term] A copy of this ontology term object with the parents removed
-    def detached_subgraph_copy
+    # @return [OLS::Term] A copy of this term with the parents removed
+    #
+    # @see #detach_children!
+    # @since 0.3.0
+    def detach_children
       copy = self.dup
-      copy.parents = []
-      copy.lock_parents
+      copy.really_detach_children!
       copy
     end
 
@@ -551,6 +562,12 @@ module OLS
       @graph[self.term_id][:parents] = parents.map(&:term_id)
     end
 
+    def children=(children)
+      raise ArgumentError, "You must pass an array" unless children.is_a?(Array)
+      children.each { |p| raise TypeError, "You must pass an array of OLS::Term objects" unless p.is_a?(OLS::Term) }
+      @graph[self.term_id][:children] = children.map(&:term_id)
+    end
+
     # Graph access function. Adds a parent relationship (for this term) to the graph.
     #
     # @param [OLS::Term] parent The OLS::Term to add as a parent
@@ -574,6 +591,53 @@ module OLS
     # @param [String] term_id The term id to look up
     def find_in_graph(term_id)
       @graph.find(term_id)
+    end
+
+    # Graph utility function.  Removes terms from the ontology graph
+    # that are not in the list passed to it.
+    #
+    # @param [Array] ids_to_retain The list of term_ids to keep in the graph
+    def flush_graph( ids_to_retain )
+      graph = @graph.raw_graph
+
+      graph.delete_if { |key,val| !ids_to_retain.include?(key) }
+      graph.each do |key,val|
+        val[:parents].delete_if { |elm| !ids_to_retain.include?(elm) }
+        val[:children].delete_if { |elm| !ids_to_retain.include?(elm) }
+      end
+    end
+
+    # Utility function for the #focus_graph and #focus_graph! methods.  This does the
+    # real work of editing the OLS::Graph.
+    #
+    # @see #focus_graph
+    # @see #focus_graph!
+    def really_focus_graph_around_term!
+      self.all_parents.each { |parent| parent.lock }
+      self.all_children.each { |child| child.lock }
+      self.flush_graph( [self.term_id] + self.all_parent_ids + self.all_child_ids )
+    end
+
+    # Utility function for #detach_parents and #detach_parents! that
+    # actually does the work of removing children.
+    #
+    # @see #detach_parents
+    # @see #detach_parents!
+    def really_detach_parents!
+      self.children = []
+      self.lock_children
+      self.flush_graph( [self.term_id] + self.all_parent_ids )
+    end
+
+    # Utility function for #detach_children and #detach_children! that
+    # actually does the work of removing parents.
+    #
+    # @see #detach_children
+    # @see #detach_children!
+    def really_detach_children!
+      self.parents = []
+      self.lock_parents
+      self.flush_graph( [self.term_id] + self.all_child_ids )
     end
 
     private
@@ -611,7 +675,7 @@ module OLS
       names_to_merge = names2 - names1
       names_to_merge.each do |name|
         # puts "--- MERGING #{name} INTO #{graph1.term_id} ---"
-        new_child = graph2[name].detached_subgraph_copy
+        new_child = graph2[name].detach_children
 
         # replace the new_child's graph
         graph1_graph             = graph1.graph
