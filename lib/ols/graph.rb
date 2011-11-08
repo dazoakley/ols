@@ -81,10 +81,10 @@ module OLS
     def add_relationship(parent,child)
       raise TypeError, "You must pass an OLS::Term object" unless parent.is_a? OLS::Term
       raise TypeError, "You must pass an OLS::Term object" unless child.is_a? OLS::Term
-      
+
       add_to_graph(parent) if self.find(parent.term_id).nil?
       add_to_graph(child) if self.find(child.term_id).nil?
-      
+
       @graph[parent.term_id][:children].push(child.term_id) unless @graph[parent.term_id][:children].include?(child.term_id)
       @graph[child.term_id][:parents].push(parent.term_id) unless @graph[child.term_id][:parents].include?(parent.term_id)
     end
