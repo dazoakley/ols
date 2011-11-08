@@ -401,43 +401,49 @@ module OLS
 
     # Remove the children from this ontology graph.
     #
-    # @see #detach_parents
-    # @since 0.3.0
-    def detach_parents!
-      self.really_detach_parents!
+    # @see #remove_children
+    # @since 0.3.1
+    def remove_children!
+      self.really_remove_children!
     end
 
     # Returns a copy of this ontology term object with the children removed.
     #
     # @return [OLS::Term] A copy of this term with the children removed
     #
-    # @see #detach_parents!
-    # @since 0.3.0
-    def detach_parents
+    # @see #remove_children!
+    # @since 0.3.1
+    def remove_children
       copy = self.dup
-      copy.really_detach_parents!
+      copy.really_remove_children!
       copy
     end
 
+    alias :detach_parents! :remove_children!
+    alias :detach_parents :remove_children
+
     # Removes the parents from this ontology graph.
     #
-    # @see #detach_children
-    # @since 0.3.0
-    def detach_children!
-      self.really_detach_children!
+    # @see #remove_parents
+    # @since 0.3.1
+    def remove_parents!
+      self.really_remove_parents!
     end
 
     # Returns a copy of this ontology term object with the parents removed.
     #
     # @return [OLS::Term] A copy of this term with the parents removed
     #
-    # @see #detach_children!
-    # @since 0.3.0
-    def detach_children
+    # @see #remove_parents!
+    # @since 0.3.1
+    def remove_parents
       copy = self.dup
-      copy.really_detach_children!
+      copy.really_remove_parents!
       copy
     end
+
+    alias :detach_children! :remove_parents!
+    alias :detach_children :remove_parents
 
     # Pretty prints the (sub)graph rooted at this ontology term.
     #
@@ -618,23 +624,23 @@ module OLS
       self.flush_graph( [self.term_id] + self.all_parent_ids + self.all_child_ids )
     end
 
-    # Utility function for #detach_parents and #detach_parents! that
+    # Utility function for #remove_children and #remove_children! that
     # actually does the work of removing children.
     #
-    # @see #detach_parents
-    # @see #detach_parents!
-    def really_detach_parents!
+    # @see #remove_children
+    # @see #remove_children!
+    def really_remove_children!
       self.children = []
       self.lock_children
       self.flush_graph( [self.term_id] + self.all_parent_ids )
     end
 
-    # Utility function for #detach_children and #detach_children! that
+    # Utility function for #remove_parents and #remove_parents! that
     # actually does the work of removing parents.
     #
-    # @see #detach_children
-    # @see #detach_children!
-    def really_detach_children!
+    # @see #remove_parents
+    # @see #remove_parents!
+    def really_remove_parents!
       self.parents = []
       self.lock_parents
       self.flush_graph( [self.term_id] + self.all_child_ids )
@@ -675,7 +681,7 @@ module OLS
       names_to_merge = names2 - names1
       names_to_merge.each do |name|
         # puts "--- MERGING #{name} INTO #{graph1.term_id} ---"
-        new_child = graph2[name].detach_children
+        new_child = graph2[name].remove_parents
 
         # replace the new_child's graph
         graph1_graph             = graph1.graph

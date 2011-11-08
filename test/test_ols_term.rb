@@ -281,7 +281,7 @@ class OLSTermTest < Test::Unit::TestCase
         #                 |---+ EMAP:3018
 
         @emap_term.focus_graph!
-        @emap_term.detach_parents!
+        @emap_term.remove_children!
 
         assert_equal 'EMAP:3018', @emap_term.term_id
         assert_equal 'EMAP:0', @emap_term.root.term_id
@@ -290,7 +290,7 @@ class OLSTermTest < Test::Unit::TestCase
 
         # Test the copy variant of this function
         @mp_term.focus_graph!
-        new_term = @mp_term.detach_parents
+        new_term = @mp_term.remove_children
 
         assert new_term.object_id != @mp_term.object_id
         assert new_term.is_leaf?
@@ -321,7 +321,7 @@ class OLSTermTest < Test::Unit::TestCase
         #         |---> EMAP:3021
 
         @emap_term.focus_graph!
-        @emap_term.detach_children!
+        @emap_term.remove_parents!
 
         assert_equal 'EMAP:3018', @emap_term.term_id
         assert @emap_term.is_root?
@@ -330,7 +330,7 @@ class OLSTermTest < Test::Unit::TestCase
 
         # Test the copy variant of this function
         @mp_term.focus_graph!
-        new_term = @mp_term.detach_children
+        new_term = @mp_term.remove_parents
 
         assert new_term.object_id != @mp_term.object_id
         assert_equal 96, new_term.size
