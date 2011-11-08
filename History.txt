@@ -1,3 +1,7 @@
+=== 0.3.1 2011-11-08
+
+* Renamed the OLS::Term.detach_* methods to much more sensible names.
+
 === 0.3.0 2011-11-08
 
 * Addition of new functions to deatch graphs from parents/children.
