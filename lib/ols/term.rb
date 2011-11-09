@@ -447,8 +447,9 @@ module OLS
 
     # Pretty prints the (sub)graph rooted at this ontology term.
     #
+    # @param [Boolean] show_term_name Show the term name?
     # @param [Number] level The indentation level (4 spaces) to start with.
-    def print_graph(level=1)
+    def print_graph(show_term_name=false,level=1)
       if is_root?
         print "*"
       else
@@ -457,9 +458,11 @@ module OLS
         print( self.has_children? ? "+" : ">" )
       end
 
-      puts " #{self.term_id}"
+      print_str = " #{self.term_id}"
+      print_str << " - #{self.term_name}" if show_term_name
+      puts print_str
 
-      self.children.each { |child| child.print_graph(level + 1)}
+      self.children.each { |child| child.print_graph(show_term_name,level + 1)}
     end
 
     # Save an image file showing graph structure of all children from the current term.

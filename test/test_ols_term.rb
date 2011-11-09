@@ -517,29 +517,29 @@ class OLSTermTest < Test::Unit::TestCase
       should 'allow users to print a graph representation of the graph to STDOUT' do
         @emap_term.focus_graph!
         emap_graph = <<-EMAP
-* EMAP:0
-    |---+ EMAP:2636
-        |---+ EMAP:2822
-            |---+ EMAP:2987
-                |---+ EMAP:3018
-                    |---+ EMAP:3022
-                        |---+ EMAP:3023
-                            |---+ EMAP:3024
-                                |---> EMAP:3025
-                                |---> EMAP:3026
-                            |---+ EMAP:3027
-                                |---> EMAP:3029
-                                |---> EMAP:3028
-                            |---+ EMAP:3030
-                                |---> EMAP:3031
-                                |---> EMAP:3032
-                    |---> EMAP:3019
-                    |---+ EMAP:3020
-                        |---> EMAP:3021
+* EMAP:0 - Mouse_anatomy_by_time_xproduct
+    |---+ EMAP:2636 - TS18,embryo
+        |---+ EMAP:2822 - TS18,organ system
+            |---+ EMAP:2987 - TS18,sensory organ
+                |---+ EMAP:3018 - TS18,nose
+                    |---+ EMAP:3022 - TS18,process,nose
+                        |---+ EMAP:3023 - TS18,fronto-nasal process
+                            |---+ EMAP:3024 - TS18,frontal process
+                                |---> EMAP:3025 - TS18,ectoderm,frontal process
+                                |---> EMAP:3026 - TS18,mesenchyme,frontal process
+                            |---+ EMAP:3027 - TS18,latero-nasal process
+                                |---> EMAP:3029 - TS18,mesenchyme,latero-nasal process
+                                |---> EMAP:3028 - TS18,ectoderm,latero-nasal process
+                            |---+ EMAP:3030 - TS18,medial-nasal process
+                                |---> EMAP:3031 - TS18,ectoderm,medial-nasal process
+                                |---> EMAP:3032 - TS18,mesenchyme,medial-nasal process
+                    |---> EMAP:3019 - TS18,naso-lacrimal groove
+                    |---+ EMAP:3020 - TS18,olfactory pit
+                        |---> EMAP:3021 - TS18,nasal epithelium
 EMAP
 
         assert_output(emap_graph.lstrip,nil) do
-          @emap_term.root.print_graph
+          @emap_term.root.print_graph(true)
         end
       end
     end
