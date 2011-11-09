@@ -435,6 +435,9 @@ class OLSTermTest < Test::Unit::TestCase
         assert main_merge_node.children.map(&:term_id).include? 'EMAP:3003'
         assert main_merge_node.children.map(&:term_id).include? 'EMAP:3018'
 
+        assert_equal 'TS18,perioptic mesenchyme', @emap_term.root['EMAP:2636']['EMAP:2822']['EMAP:2987']['EMAP:3003']['EMAP:3012'].term_name
+        assert_equal 'TS18,retina', @emap_term.root['EMAP:2636']['EMAP:2822']['EMAP:2987']['EMAP:3003']['EMAP:3013'].term_name
+
         # Also check that the internal graph has been merged accordingly
         raw_graph      = @emap_term.instance_variable_get(:@graph).raw_graph
         emap3003_graph = raw_graph['EMAP:3003'][:object].instance_variable_get(:@graph).raw_graph

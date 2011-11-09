@@ -21,7 +21,7 @@ module OLS
       source.raw_graph.each do |term_id,term_details|
         old_term = term_details[:object]
 
-        new_term = OLS::Term.new( old_term.term_id, old_term.term_id, self )
+        new_term = OLS::Term.new( old_term.term_id, old_term.term_name, self )
         [
           :@already_fetched_parents,
           :@already_fetched_children,
