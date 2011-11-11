@@ -12,16 +12,16 @@ It provides an easy lookup of ontology terms and automagically builds up ontolog
 == Basic Usage
 
 Include the module in your code:
-  
+
   require 'rubygems'
   require 'ols'
-  
+
 Then, to lookup an ontology term:
-  
+
   ont = OLS.find_by_id('EMAP:3018')
-  
+
 This will create a simple tree object for the EMAP term EMAP:3018
-  
+
   ont.term_id             # => "EMAP:3018"
   ont.term_name           # => "TS18,nose"
 
@@ -143,3 +143,4 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
