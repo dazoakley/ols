@@ -23,10 +23,10 @@ module OLS
     # @return [OLS::Term] The found OLS::Term object or +nil+
     def find_by_id(term_id)
       found_term = nil
-      filename = @term_id_to_files[term_id].to_s
+      filename = @term_id_to_files[term_id]
 
       unless filename.nil? || filename.empty?
-        root_term = Marshal.load( File.open("#{@cache_directory}/#{filename}") )
+        root_term = Marshal.load( @the_cache[filename] )
         found_term = root_term.send(:find_in_graph,term_id)
       end
 
@@ -49,7 +49,7 @@ module OLS
 
       new_filenames = []
 
-     OLS.root_terms(ontology).each do |term|
+      OLS.root_terms(ontology).each do |term|
         term_filename = "#{term.term_id.gsub(':','')}.marshal"
         term.focus_graph!
         File.open("#{@cache_directory}/#{term_filename}",'w') { |f| f << Marshal.dump(term) }
@@ -93,6 +93,7 @@ module OLS
     def prepare_cache
       @cached_ontologies = {}
       @term_id_to_files = {}
+      @the_cache = {}
 
       Dir.mkdir(@cache_directory) unless Dir.exists?(@cache_directory)
 
@@ -100,8 +101,11 @@ module OLS
 
       @cached_ontologies.each do |ontology,details|
         details[:filenames].each do |filename|
-          root_term = Marshal.load( File.open("#{@cache_directory}/#{filename}") )
+          file_contents = File.new("#{@cache_directory}/#{filename}",'rb').read
+          root_term = Marshal.load( file_contents )
           next unless root_term.is_a? OLS::Term
+
+          @the_cache[ filename.to_sym ] = file_contents
           @term_id_to_files[ root_term.term_id ] = filename.to_sym
           root_term.all_child_ids.each { |term_id| @term_id_to_files[term_id] = filename.to_sym }
         end
