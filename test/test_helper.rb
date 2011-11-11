@@ -43,7 +43,8 @@ VCR.config do |c|
   c.stub_with                :webmock
   c.ignore_localhost         = true
   c.default_cassette_options = {
-    :record            => :new_episodes,
-    :match_requests_on => [:uri, :method, :body]
+    :record             => :new_episodes,
+    :re_record_interval => 604800, # 7 days in seconds
+    :match_requests_on  => [:uri, :method, :body]
   }
 end
