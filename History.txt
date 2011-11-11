@@ -1,7 +1,14 @@
+=== 0.3.3 2011-11-11
+
+* Minor cache modification - hold the marshaled strings in ram rather than repeadedly
+  read off disk.  This should ease pain when there are lots of concurrent requests to
+  a slow file system.
+
 === 0.3.2 2011-11-09
 
 * Bugfix - the term_name was getting lost off of the new nodes when we merged two graphs.
-* Small feature enhancement - when printing the graph to stdout, add an option to print out the term_name too.
+* Small feature enhancement - when printing the graph to stdout, add an option to print
+  out the term_name too.
 
 === 0.3.1 2011-11-08
 
