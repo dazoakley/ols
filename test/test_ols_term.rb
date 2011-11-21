@@ -3,7 +3,7 @@ require 'test_helper'
 class OLSTermTest < Test::Unit::TestCase
   context 'An OLS::Term object' do
     setup do
-      VCR.insert_cassette('test_ols_term')
+      VCR.insert_cassette('test_ols')
     end
 
     teardown do

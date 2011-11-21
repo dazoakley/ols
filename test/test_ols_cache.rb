@@ -53,7 +53,7 @@ class OLSTermTest < Test::Unit::TestCase
     end
 
     should 'not get in the way when we request something that is not in the cache' do
-      VCR.use_cassette('test_ols_cache') do
+      VCR.use_cassette('test_ols') do
         assert_equal nil, OLS.instance_variable_get(:@cache).instance_variable_get(:@term_id_to_files)['GO:0008150']
 
         biological_process = OLS.find_by_id('GO:0008150')
@@ -72,7 +72,7 @@ class OLSTermTest < Test::Unit::TestCase
         assert_equal false, files.include?('TRANS0000000.marshal')
       end
 
-      VCR.use_cassette('test_ols_cache') do
+      VCR.use_cassette('test_ols') do
         # list cached ontologies
         assert OLS.cached_ontologies.is_a? Array
         assert OLS.cached_ontologies.include? 'EMAP'
@@ -92,7 +92,7 @@ class OLSTermTest < Test::Unit::TestCase
       trans = OLS.find_by_id('TRANS:0000000')
       assert_equal 25, trans.size
 
-      VCR.use_cassette('test_ols_cache') do
+      VCR.use_cassette('test_ols') do
         # remove an ontology from the cache
         OLS.remove_ontology_from_cache('TRANS')
         assert_equal false, OLS.cached_ontologies.include?('TRANS')
