@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 require 'savon'
+require "sequel"
 
 # Simple wrapper for interacting with the OLS (Ontology Lookup Service - http://www.ebi.ac.uk/ontology-lookup/) 
 # database (created and managed by the EBI).
@@ -146,7 +147,7 @@ module OLS
     #
     # @since 0.2.0
     def setup_cache(options={})
-      @cache = OLS::Cache.new(options)
+      @cache = OLS::DatabaseCache.new(options)
     end
 
     # Returns a list of the cached ontologies.

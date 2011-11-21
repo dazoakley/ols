@@ -2,8 +2,8 @@
 
 module OLS
 
-  # Utility class responsible for handling caching in the OLS gem.  You should *NOT* 
-  # really interact with instances of this class directly, use the methods on the OLS 
+  # Utility class responsible for handling caching in the OLS gem.  You should *NOT*
+  # really interact with instances of this class directly, use the methods on the OLS
   # module and the resulting OLS::Term objects.
   #
   # @author Darren Oakley (https://github.com/dazoakley)
@@ -108,6 +108,102 @@ module OLS
           @the_cache[ filename.to_sym ] = file_contents
           @term_id_to_files[ root_term.term_id ] = filename.to_sym
           root_term.all_child_ids.each { |term_id| @term_id_to_files[term_id] = filename.to_sym }
+        end
+      end
+    end
+  end
+
+  class DatabaseCache
+    def initialize(args={})
+      defaults = {
+        :adapter  => 'mysql2',
+        :database => 'ols_cache',
+        :host     => '127.0.0.1',
+        :port     => 3306,
+        :user     => 'ols',
+        :password => 'ols',
+        :encoding => 'utf8'
+      }
+
+      @db_connection_details = defaults.merge(args)
+
+      prepare_cache
+    end
+
+    def find_by_id(term_id)
+      term = nil
+      cache_entry = self.db[:term_cache].first( :term_key => term_id )
+      term = Marshal.load( Zlib::Inflate.inflate(cache_entry[:marshalled_object]) ) unless cache_entry.nil?
+      term
+    end
+
+    def add_ontology_to_cache(ontology)
+      raise ArgumentError, "'#{ontology}' is not a valid OLS ontology" unless OLS.ontologies.include?(ontology)
+
+      db = self.db
+      db.transaction do
+
+        ontology_stamp = db[:ontologies].first( :name => ontology )
+        if ontology_stamp.nil?
+          db[:ontologies].insert( :name => ontology, :cache_date => Date.today )
+        else
+          ontology_stamp.update( :cache_date => Date.today )
+        end
+
+        OLS.root_terms(ontology).each do |root_term|
+          root_term.focus_graph!
+          root_term.send(:get_term_metadata)
+
+          root_term.all_children.each do |child|
+            child.send(:get_term_metadata)
+          end
+
+          save_term_to_db(db,ontology,root_term)
+
+          root_term.all_children.each do |child|
+            term = child.dup
+            term.focus_graph!
+            save_term_to_db(db,ontology,term)
+          end
+        end
+
+      end
+    end
+
+    def save_term_to_db(db,ontology,term)
+      db[:term_cache].filter( :term_key => term.term_id ).delete
+      db[:term_cache].insert(
+        :term_key => term.term_id,
+        :ontology_name => ontology,
+        :marshalled_object => Zlib::Deflate.deflate( Marshal.dump(term) )
+      )
+    end
+
+    def db
+      @db_connection = Sequel.connect(@db_connection_details) if @db_connection.nil?
+      @db_connection
+    end
+
+    private
+
+    def prepare_cache
+      db = self.db
+
+      unless db.table_exists? :ontologies
+        db.create_table :ontologies do
+          String :name
+          Date :cache_date, { :null => false }
+          primary_key [:name]
+        end
+      end
+
+      unless db.table_exists? :term_cache
+        db.create_table :term_cache do
+          String :term_key
+          String :ontology_name, { :null => false }
+          File :marshalled_object, { :null => false }
+          primary_key [:term_key]
+          foreign_key [:ontology_name], :ontologies, { :key => :name }
         end
       end
     end
