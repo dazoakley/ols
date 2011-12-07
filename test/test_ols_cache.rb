@@ -52,6 +52,23 @@ class OLSTermTest < Test::Unit::TestCase
       OLS.unstub(:request)
     end
 
+    should 'be able to access root terms (if they are in the cache) without connecting to the OLS service' do
+      OLS.stubs(:request).returns({ :item => [] })
+
+      assert_respond_to OLS.instance_variable_get(:@cache), :root_terms
+
+      emap_roots = OLS.root_terms('EMAP')
+      emap_root = emap_roots.first
+
+      assert emap_roots.is_a? Array
+      assert emap_root.is_a? OLS::Term
+      assert emap_root.is_root?
+      assert_equal 'EMAP:0', emap_root.term_id
+      assert_equal 13731, emap_root.size
+
+      OLS.unstub(:request)
+    end
+
     should 'not get in the way when we request something that is not in the cache' do
       VCR.use_cassette('test_ols') do
         assert_equal nil, OLS.instance_variable_get(:@cache).instance_variable_get(:@term_id_to_files)['GO:0008150']
@@ -62,6 +79,17 @@ class OLSTermTest < Test::Unit::TestCase
         assert biological_process.is_root?
         assert_equal false, biological_process.is_leaf?
         assert_equal 28, biological_process.children.size
+      end
+    end
+
+    should 'not get in the way when we request root_terms that are not in the cache' do
+      VCR.use_cassette('test_ols') do
+        assert !OLS.cached_ontologies.include?('GO')
+
+        go_roots = OLS.root_terms('GO')
+
+        assert go_roots.is_a? Array
+        assert_equal 3, go_roots.size
       end
     end
 

@@ -62,15 +62,19 @@ module OLS
     # @return [Array] An array of OLS::Term objects for all root terms the requested ontology
     def root_terms(ontology)
       root_terms = []
-      response = request(:get_root_terms) { soap.body = { :ontologyName => ontology } }
+      root_terms = @cache.root_terms(ontology) if using_cache?
 
-      if response[:item].is_a? Array
-        response[:item].each do |term|
+      if root_terms.empty?
+        response = request(:get_root_terms) { soap.body = { :ontologyName => ontology } }
+
+        if response[:item].is_a? Array
+          response[:item].each do |term|
+            root_terms.push( OLS::Term.new(term[:key],term[:value]) )
+          end
+        else
+          term = response[:item]
           root_terms.push( OLS::Term.new(term[:key],term[:value]) )
         end
-      else
-        term = response[:item]
-        root_terms.push( OLS::Term.new(term[:key],term[:value]) )
       end
 
       root_terms

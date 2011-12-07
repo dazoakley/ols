@@ -33,6 +33,21 @@ module OLS
       found_term
     end
 
+    # Pull root_terms (as OLS::Term objects) out of the cache. Returns an empty array
+    # if the specified ontology is not in the cache.
+    #
+    # @param [String] ontology The ontology name
+    # @return [Array] An array of root terms
+    def root_terms(ontology)
+      root_terms = []
+
+      if @cached_ontologies.keys.include? ontology
+        root_terms = @cached_ontologies[ontology][:root_terms].map { |term_id| self.find_by_id(term_id) }
+      end
+
+      root_terms
+    end
+
     # Returns a list of the cached ontologies.
     #
     # @return [Array] A list of the cached ontologies
@@ -47,16 +62,25 @@ module OLS
     def add_ontology_to_cache(ontology)
       raise ArgumentError, "'#{ontology}' is not a valid OLS ontology" unless OLS.ontologies.include?(ontology)
 
+      new_root_terms = []
       new_filenames = []
 
       OLS.root_terms(ontology).each do |term|
         term_filename = "#{term.term_id.gsub(':','')}.marshal"
         term.focus_graph!
+
         File.open("#{@cache_directory}/#{term_filename}",'w') { |f| f << Marshal.dump(term) }
-        @cached_ontologies[ontology] ||= { :filenames => [], :date => Date.today }
+
+        @cached_ontologies[ontology] ||= { :root_terms => [], :filenames => [], :date => Date.today }
+
+        @cached_ontologies[ontology][:root_terms].push(term.term_id) unless @cached_ontologies[ontology][:root_terms].include? term.term_id
+        new_root_terms.push(term_filename)
+
         @cached_ontologies[ontology][:filenames].push(term_filename) unless @cached_ontologies[ontology][:filenames].include? term_filename
         new_filenames.push(term_filename)
       end
+
+      @cached_ontologies[ontology][:root_terms].delete_if { |term_id| !new_root_terms.include?(term_id) }
       @cached_ontologies[ontology][:filenames].delete_if { |file| !new_filenames.include?(file) }
 
       write_cached_ontologies_to_disk
