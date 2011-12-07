@@ -166,7 +166,7 @@ module OLS
         prev_parents = prev_parents.map(&:parents).flatten
       end
 
-      parentage_array.reverse.flatten
+      parentage_array.reverse.flatten.uniq
     end
 
     # Returns an array of all parent term_ids for this ontology term
@@ -176,7 +176,7 @@ module OLS
     #
     # @return [Array] An array of ontology term_ids
     def all_parent_ids
-      all_parents.map(&:term_id).uniq
+      all_parents.map(&:term_id)
     end
 
     # Returns an array of all parent term_names for this ontology term
@@ -186,7 +186,7 @@ module OLS
     #
     # @return [Array] An array of ontology term_names
     def all_parent_names
-      all_parents.map(&:term_name).uniq
+      all_parents.map(&:term_name)
     end
 
     alias :all_parent_term_ids :all_parent_ids
@@ -269,7 +269,7 @@ module OLS
         prev_children = prev_children.map(&:children).flatten
       end
 
-      children_array.flatten
+      children_array.flatten.uniq
     end
 
     # Returns an array of all child term_ids for this ontology term
