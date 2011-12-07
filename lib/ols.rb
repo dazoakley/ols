@@ -199,9 +199,7 @@ module OLS
   end
 end
 
-directory = File.expand_path(File.dirname(__FILE__))
-
-require File.join(directory, 'ols', 'version')
-require File.join(directory, 'ols', 'graph')
-require File.join(directory, 'ols', 'term')
-require File.join(directory, 'ols', 'cache')
+require 'ols/version'
+require 'ols/graph'
+require 'ols/term'
+require 'ols/cache'

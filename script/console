@@ -2,7 +2,8 @@
 # File: script/console
 irb = RUBY_PLATFORM =~ /(:?mswin|mingw)/ ? 'irb.bat' : 'irb'
 
-libs =  " -r irb/completion"
+libs = " -I #{File.dirname(__FILE__) + '/../lib'}"
+libs <<  " -r irb/completion"
 libs <<  " -r #{File.dirname(__FILE__) + '/../lib/ols.rb'}"
 
 puts "Loading ols gem"
