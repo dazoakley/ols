@@ -171,7 +171,7 @@ module OLS
 
     # Returns an array of all parent term_ids for this ontology term
     # (all the way to the top of the ontology).  The array is ordered
-    # with the root term first and the most direct parent(s) last. 
+    # with the root term first and the most direct parent(s) last.
     # Duplicates are also filtered out.
     #
     # @return [Array] An array of ontology term_ids
@@ -311,13 +311,13 @@ module OLS
 
     # Flesh out and/or focus the ontology graph around this term.
     #
-    # This will fetch all children and parents for this term, and will also trick each 
-    # parent/child object into thinking the ontology graph is fully formed so no further 
-    # requests to OLS will be made (to further flesh out the graph).  It will also cut down 
+    # This will fetch all children and parents for this term, and will also trick each
+    # parent/child object into thinking the ontology graph is fully formed so no further
+    # requests to OLS will be made (to further flesh out the graph).  It will also cut down
     # a much larger ontology graph to just focus on the parents/descendants of this term.
     #
-    # *NOTE:* This method will totally clobber the existing ontology graph that this term 
-    # is part of by removing any term and relationship that is not supposed to be part of this 
+    # *NOTE:* This method will totally clobber the existing ontology graph that this term
+    # is part of by removing any term and relationship that is not supposed to be part of this
     # focused graph.  Use #focus_graph to pull out a copy and be non-destructive.
     #
     # i.e. This allows us to do the following
@@ -356,13 +356,13 @@ module OLS
 
     # Flesh out and/or focus the ontology graph around this term.
     #
-    # This will fetch all children and parents for this term, and will also trick each 
-    # parent/child object into thinking the ontology graph is fully formed so no further 
-    # requests to OLS will be made (to further flesh out the graph).  It will also cut down 
+    # This will fetch all children and parents for this term, and will also trick each
+    # parent/child object into thinking the ontology graph is fully formed so no further
+    # requests to OLS will be made (to further flesh out the graph).  It will also cut down
     # a much larger ontology graph to just focus on the parents/descendants of this term.
     #
-    # *NOTE:* This method does not affect self.  It returns a completley new OLS::Term 
-    # object containing a completley new internal OLS::Graph.  Use #focus_graph! if you 
+    # *NOTE:* This method does not affect self.  It returns a completley new OLS::Term
+    # object containing a completley new internal OLS::Graph.  Use #focus_graph! if you
     # wish to cut down the existing graph.
     #
     # i.e. This allows us to do the following
@@ -513,7 +513,7 @@ module OLS
       write_dot_and_image_file(dotfile,imgfile,fmt,nodes,node_ranks,edges)
     end
 
-    # Image drawing utility function.  This is responsible for writing the DOT 
+    # Image drawing utility function.  This is responsible for writing the DOT
     # source file and converting it into the desired image format.
     #
     # @param [String] dotfile The DOT filename
