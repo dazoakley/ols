@@ -91,9 +91,8 @@ class OLSTermTest < Test::Unit::TestCase
 
         assert @mp_term.all_parents.is_a? Array
         assert @mp_term.all_parents.first.is_a? OLS::Term
-        assert_equal 7, @mp_term.all_parents.size
+        assert_equal 6, @mp_term.all_parents.size
         assert_equal 'MP:0000001', @mp_term.all_parents.first.term_id
-        assert_equal 'MP:0000001', @mp_term.all_parents[2].term_id
         assert @mp_term.all_parents.last.term_id =~ /MP:0000545|MP:0009250/
       end
 
