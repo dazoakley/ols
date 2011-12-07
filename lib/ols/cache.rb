@@ -65,9 +65,11 @@ module OLS
       remove_ontology_from_cache(ontology) if @cached_ontologies.has_key?(ontology)
 
       OLS.root_terms(ontology).each do |term|
-        term_filename = "#{term.term_id.gsub(':','')}.marshal"
         term.focus_graph!
+        term.send(:get_term_metadata)
+        term.all_children.each { |child| child.send(:get_term_metadata) }
 
+        term_filename = "#{term.term_id.gsub(':','')}.marshal"
         File.open("#{@cache_directory}/#{term_filename}",'w') { |f| f << Marshal.dump(term) }
 
         @cached_ontologies[ontology] ||= { :root_terms => [], :filenames => [], :date => Date.today }
