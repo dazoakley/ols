@@ -62,8 +62,7 @@ module OLS
     def add_ontology_to_cache(ontology)
       raise ArgumentError, "'#{ontology}' is not a valid OLS ontology" unless OLS.ontologies.include?(ontology)
 
-      new_root_terms = []
-      new_filenames = []
+      remove_ontology_from_cache(ontology) if @cached_ontologies.has_key?(ontology)
 
       OLS.root_terms(ontology).each do |term|
         term_filename = "#{term.term_id.gsub(':','')}.marshal"
@@ -72,16 +71,9 @@ module OLS
         File.open("#{@cache_directory}/#{term_filename}",'w') { |f| f << Marshal.dump(term) }
 
         @cached_ontologies[ontology] ||= { :root_terms => [], :filenames => [], :date => Date.today }
-
         @cached_ontologies[ontology][:root_terms].push(term.term_id) unless @cached_ontologies[ontology][:root_terms].include? term.term_id
-        new_root_terms.push(term_filename)
-
         @cached_ontologies[ontology][:filenames].push(term_filename) unless @cached_ontologies[ontology][:filenames].include? term_filename
-        new_filenames.push(term_filename)
       end
-
-      @cached_ontologies[ontology][:root_terms].delete_if { |term_id| !new_root_terms.include?(term_id) }
-      @cached_ontologies[ontology][:filenames].delete_if { |file| !new_filenames.include?(file) }
 
       write_cached_ontologies_to_disk
       prepare_cache
