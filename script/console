@@ -1,10 +1,9 @@
 #!/usr/bin/env ruby
-# File: script/console
-irb = RUBY_PLATFORM =~ /(:?mswin|mingw)/ ? 'irb.bat' : 'irb'
 
-libs = " -I #{File.dirname(__FILE__) + '/../lib'}"
-libs <<  " -r irb/completion"
-libs <<  " -r #{File.dirname(__FILE__) + '/../lib/ols.rb'}"
+$: << File.join(File.dirname(__FILE__) + '/../lib')
 
-puts "Loading ols gem"
-exec "#{irb} #{libs} --simple-prompt"
+require 'ols'
+require 'irb'
+require 'irb/completion'
+IRB.start
+
