@@ -1,9 +1,13 @@
 #!/usr/bin/env ruby
 
-$: << File.join(File.dirname(__FILE__) + '/../lib')
+$LOAD_PATH << File.join(File.dirname(__FILE__) + '/../lib')
 
+require 'bundler/setup'
+require 'pry'
 require 'ols'
-require 'irb'
-require 'irb/completion'
-IRB.start
+
+puts "Welcome to the OLS console (note - you're using pry, not irb)"
+
+Pry.config.prompt = proc { "ols> " }
+Pry.start
 

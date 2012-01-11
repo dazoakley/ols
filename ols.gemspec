@@ -1,5 +1,7 @@
-# -*- encoding: utf-8 -*-
-$:.push File.expand_path("../lib", __FILE__)
+# encoding: utf-8
+
+$LOAD_PATH << File.expand_path("../lib", __FILE__)
+
 require "ols/version"
 
 Gem::Specification.new do |s|
@@ -32,4 +34,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency "simplecov-rcov"
   s.add_development_dependency "mocha"
   s.add_development_dependency "awesome_print"
+  s.add_development_dependency "pry"
 end
