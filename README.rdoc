@@ -1,4 +1,4 @@
-= OLS
+= OLS {<img src="https://secure.travis-ci.org/dazoakley/ols.png?branch=master" />}[http://travis-ci.org/dazoakley/ols] {<img src="https://gemnasium.com/dazoakley/ols.png?travis" />}[https://gemnasium.com/dazoakley/ols]
 
 http://github.com/dazoakley/ols
 
