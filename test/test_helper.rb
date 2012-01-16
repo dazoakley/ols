@@ -1,5 +1,7 @@
 # Add the lib directory to the search path
-$:.unshift( "#{File.expand_path(File.dirname(__FILE__))}/../lib" )
+$LOAD_PATH.unshift( "#{File.expand_path(File.dirname(__FILE__))}/../lib" )
+
+require 'bundler/setup'
 
 # Set-up SimpleCov (code coverage tool for Ruby 1.9)
 if /^1.9/ === RUBY_VERSION
