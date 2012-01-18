@@ -20,7 +20,7 @@ class OLSTermTest < Test::Unit::TestCase
         assert_equal 'EMAP:3018', @emap_term.term_id
         assert_equal 'TS18,nose', @emap_term.term_name
         assert_equal 'MP:0002115', @mp_term.term_id
-        assert_equal 'abnormal skeleton extremities morphology', @mp_term.term_name
+        assert_equal 'abnormal limb bone morphology', @mp_term.term_name
       end
 
       should 'be able to represent itself as a string' do
@@ -35,7 +35,7 @@ class OLSTermTest < Test::Unit::TestCase
 
       should 'be able to give its definition' do
         assert_nil @emap_term.definition
-        assert_equal 'any structural anomaly of the limb, autopod or tail bones', @mp_term.definition
+        assert_equal 'any structural anomaly of the limb or autopod bones', @mp_term.definition
 
         go_term = OLS.find_by_id('GO:0007242')
         assert_equal 'intracellular signal transduction', go_term.term_name
@@ -75,11 +75,11 @@ class OLSTermTest < Test::Unit::TestCase
         assert_equal 2, @mp_term.parents.size
 
         mp_term_parent_term_ids = @mp_term.parent_ids
-        assert mp_term_parent_term_ids.include?('MP:0005371')
+        assert mp_term_parent_term_ids.include?('MP:0002109')
         assert mp_term_parent_term_ids.include?('MP:0009250')
 
         mp_term_parent_term_names = @mp_term.parent_names
-        assert mp_term_parent_term_names.include? OLS.find_by_id('MP:0005371').term_name
+        assert mp_term_parent_term_names.include? OLS.find_by_id('MP:0002109').term_name
         assert mp_term_parent_term_names.include? OLS.find_by_id('MP:0009250').term_name
       end
 
@@ -91,9 +91,9 @@ class OLSTermTest < Test::Unit::TestCase
 
         assert @mp_term.all_parents.is_a? Array
         assert @mp_term.all_parents.first.is_a? OLS::Term
-        assert_equal 5, @mp_term.all_parents.size
+        assert_equal 6, @mp_term.all_parents.size
         assert_equal 'MP:0000001', @mp_term.all_parents.first.term_id
-        assert @mp_term.all_parents.last.term_id =~ /MP:0000545|MP:0009250/
+        assert @mp_term.all_parents.last.term_id =~ /MP:0002109|MP:0009250/
       end
 
       should 'be able to generate a flat list of ALL parent terms/names' do
@@ -106,11 +106,11 @@ class OLSTermTest < Test::Unit::TestCase
         assert_equal 'Mouse_anatomy_by_time_xproduct', @emap_term.all_parent_names.first
 
         assert @mp_term.all_parent_ids.is_a? Array
-        assert_equal 5, @mp_term.all_parent_ids.size
+        assert_equal 6, @mp_term.all_parent_ids.size
         assert_equal 'MP:0000001', @mp_term.all_parent_ids.first
 
         assert @mp_term.all_parent_names.is_a? Array
-        assert_equal 5, @mp_term.all_parent_names.size
+        assert_equal 6, @mp_term.all_parent_names.size
         assert_equal 'mammalian phenotype', @mp_term.all_parent_names.first
       end
 
@@ -167,9 +167,9 @@ class OLSTermTest < Test::Unit::TestCase
         assert_equal 0, OLS.find_by_id('EMAP:0').depth
         assert_equal 4, @emap_term.depth
 
-        # This next term has 2 routes through the graph - 2 and 4 levels deep
+        # This next term has 2 routes through the graph - 3 and 5 levels deep
         # the .depth function should return the shortest depth.
-        assert_equal 2, @mp_term.depth
+        assert_equal 3, @mp_term.depth
       end
 
       should 'be able to "focus" a empty ontology graph around a given term' do
@@ -297,10 +297,10 @@ class OLSTermTest < Test::Unit::TestCase
         assert new_term.object_id != @mp_term.object_id
         assert new_term.is_leaf?
         assert_equal 'MP:0000001', new_term.root.term_id
-        assert_equal 6, new_term.size
-        assert_equal 6, new_term.instance_variable_get(:@graph).raw_graph.size
-        assert_equal 103, @mp_term.size
-        assert_equal 103, @mp_term.instance_variable_get(:@graph).raw_graph.size
+        assert_equal 7, new_term.size
+        assert_equal 7, new_term.instance_variable_get(:@graph).raw_graph.size
+        assert_equal 105, @mp_term.size
+        assert_equal 105, @mp_term.instance_variable_get(:@graph).raw_graph.size
       end
 
       should 'be able to "detach" the graph to be able to retain just children' do
@@ -335,10 +335,10 @@ class OLSTermTest < Test::Unit::TestCase
         new_term = @mp_term.remove_parents
 
         assert new_term.object_id != @mp_term.object_id
-        assert_equal 98, new_term.size
-        assert_equal 98, new_term.instance_variable_get(:@graph).raw_graph.size
-        assert_equal 103, @mp_term.size
-        assert_equal 103, @mp_term.instance_variable_get(:@graph).raw_graph.size
+        assert_equal 99, new_term.size
+        assert_equal 99, new_term.instance_variable_get(:@graph).raw_graph.size
+        assert_equal 105, @mp_term.size
+        assert_equal 105, @mp_term.instance_variable_get(:@graph).raw_graph.size
       end
 
       should 'be able to merge in another ontology graph that shares a common root term' do
