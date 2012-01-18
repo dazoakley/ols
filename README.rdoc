@@ -1,5 +1,6 @@
 = OLS {<img src="https://secure.travis-ci.org/dazoakley/ols.png?branch=master" />}[http://travis-ci.org/dazoakley/ols] {<img src="https://gemnasium.com/dazoakley/ols.png?travis" />}[https://gemnasium.com/dazoakley/ols]
 
+http://rubygems.org/gems/ols
 http://github.com/dazoakley/ols
 
 OLS provides a simple interface to the EBI's Ontology Lookup Service (http://www.ebi.ac.uk/ontology-lookup/).
@@ -117,6 +118,7 @@ Different cache back-ends and other features will be built into future releases.
 
 Written by Darren Oakley (daz dot oakley at gmail dot com)
 
+http://rubygems.org/gems/ols
 http://github.com/dazoakley/ols
 
 == License
