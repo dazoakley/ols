@@ -1,3 +1,17 @@
+=== 0.3.4 2012-01-18
+
+* Minor update/clarification - the OLS::Term method .level() is now .depth(),
+  an alias is still in place for .level() though, and when this is called on a
+  term with multiple paths through the graph it will give a depth level for the
+  shortest route through the graph.
+* Bugfix - the OLS::Term methods .all_children() and .all_parents() now return
+  arrays of uniq OLS::Term objects.
+* Bugfix - when using a cached copy of an ontology, we will now pull the root
+  term out of the cache rather than hitting the soap service.
+* Bugfix - when caching an ontology, we now grab the metadata for each term
+  and put that into the cache also.
+* Some code cleaning/refactoring.
+
 === 0.3.3 2011-11-11
 
 * Minor cache modification - hold the marshaled strings in ram rather than repeadedly
