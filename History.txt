@@ -4,6 +4,7 @@
   an alias is still in place for .level() though, and when this is called on a
   term with multiple paths through the graph it will give a depth level for the
   shortest route through the graph.
+* Bugfix - the cache functionallity (and test suite) will now work with Ruby 1.8.7.
 * Bugfix - the OLS::Term methods .all_children() and .all_parents() now return
   arrays of uniq OLS::Term objects.
 * Bugfix - when using a cached copy of an ontology, we will now pull the root

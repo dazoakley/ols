@@ -25,7 +25,7 @@ module OLS
       found_term = nil
       filename = @term_id_to_files[term_id]
 
-      unless filename.nil? || filename.empty?
+      unless filename.nil? || filename.to_s.empty?
         root_term = Marshal.load( @the_cache[filename] )
         found_term = root_term.send(:find_in_graph,term_id)
       end
@@ -113,7 +113,7 @@ module OLS
       @term_id_to_files = {}
       @the_cache = {}
 
-      Dir.mkdir(@cache_directory) unless Dir.exists?(@cache_directory)
+      Dir.mkdir(@cache_directory) unless File.directory?(@cache_directory)
 
       @cached_ontologies = YAML.load( File.open("#{@cache_directory}/cached_ontologies.yaml") ) if File.exists?("#{@cache_directory}/cached_ontologies.yaml")
 

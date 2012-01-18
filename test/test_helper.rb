@@ -25,11 +25,50 @@ if /^1.9/ === RUBY_VERSION
   end
 end
 
+require 'test/unit'
 require 'shoulda'
 require 'vcr'
+require 'webmock'
 require 'mocha'
 require 'awesome_print'
 require 'ols'
+
+# Backport some useful assertions from minitest
+if /^1\.8/ === RUBY_VERSION
+  module Test::Unit::Assertions
+    def assert_output stdout = nil, stderr = nil
+      out, err = capture_io do
+        yield
+      end
+
+      x = assert_equal stdout, out, "In stdout" if stdout
+      y = assert_equal stderr, err, "In stderr" if stderr
+
+      (!stdout || x) && (!stderr || y)
+    end
+
+    def assert_silent
+      assert_output "", "" do
+        yield
+      end
+    end
+
+    def capture_io
+      require 'stringio'
+
+      orig_stdout, orig_stderr         = $stdout, $stderr
+      captured_stdout, captured_stderr = StringIO.new, StringIO.new
+      $stdout, $stderr                 = captured_stdout, captured_stderr
+
+      yield
+
+      return captured_stdout.string, captured_stderr.string
+    ensure
+      $stdout = orig_stdout
+      $stderr = orig_stderr
+    end
+  end
+end
 
 # Set-up VCR for mocking up web requests.
 VCR.config do |c|
