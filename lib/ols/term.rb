@@ -97,6 +97,7 @@ module OLS
     # the root node) we will return the value for the shortest distance through the graph.
     #
     # @return [Number] Depth of this node.
+    # @since 0.3.4
     def depth
       return 0 if self.is_root?
       1 + parents.map(&:depth).sort.first
