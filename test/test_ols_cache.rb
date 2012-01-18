@@ -51,7 +51,7 @@ class OLSTermTest < Test::Unit::TestCase
 
       # Test the collection of metadata into the cache
       mp_term = OLS.find_by_id('MP:0002115')
-      assert_equal 'any structural anomaly of the limb, autopod or tail bones', mp_term.definition
+      assert_equal 'any structural anomaly of the limb or autopod bones', mp_term.definition
 
       OLS.unstub(:request)
     end
