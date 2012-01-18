@@ -164,9 +164,12 @@ class OLSTermTest < Test::Unit::TestCase
       end
 
       should 'be able to give its depth level' do
-        assert_equal 0, OLS.find_by_id('EMAP:0').level
-        assert_equal 4, @emap_term.level
-        assert_equal [2,4], @mp_term.level
+        assert_equal 0, OLS.find_by_id('EMAP:0').depth
+        assert_equal 4, @emap_term.depth
+
+        # This next term has 2 routes through the graph - 2 and 4 levels deep
+        # the .depth function should return the shortest depth.
+        assert_equal 2, @mp_term.depth
       end
 
       should 'be able to "focus" a empty ontology graph around a given term' do

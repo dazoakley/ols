@@ -93,11 +93,16 @@ module OLS
     #
     # Depth:: Length of the terms path to its root.  Depth of a root term is zero.
     #
+    # If this term has multiple parents (and more than one route through the graph to
+    # the root node) we will return the value for the shortest distance through the graph.
+    #
     # @return [Number] Depth of this node.
-    def level
+    def depth
       return 0 if self.is_root?
-      1 + parents.first.level
+      1 + parents.map(&:depth).sort.first
     end
+
+    alias :level :depth
 
     # Returns the root term for this ontology.
     #
