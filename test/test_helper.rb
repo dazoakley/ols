@@ -34,7 +34,7 @@ require 'awesome_print'
 require 'ols'
 
 # Backport some useful assertions from minitest
-if /^1\.8/ === RUBY_VERSION
+unless Test::Unit::Assertions.method_defined?(:assert_output) || Test::Unit::Assertions.method_defined?(:assert_silent)
   module Test::Unit::Assertions
     def assert_output stdout = nil, stderr = nil
       out, err = capture_io do
