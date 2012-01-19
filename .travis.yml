@@ -8,3 +8,6 @@ rvm:
   # - rbx-19mode
   # - ree
 script: bundle exec rake test
+before_script:
+  - sudo apt-get install graphviz
+  - bundle install
