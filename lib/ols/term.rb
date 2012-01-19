@@ -122,14 +122,13 @@ module OLS
         # puts "--- REQUESTING PARENTS (#{self.term_id}) ---"
         response = OLS.request(:get_term_parents) { soap.body = { :termId => self.term_id } }
         unless response.nil?
-          if response[:item].is_a? Array
-            response[:item].each do |term|
-              parent = self.find_in_graph(term[:key]) || OLS::Term.new(term[:key],term[:value],@graph)
-              self.add_parent(parent)
-            end
-          else
-            term = response[:item]
-            parent = self.find_in_graph(term[:key]) || OLS::Term.new(term[:key],term[:value],@graph)
+          items = response[:item]
+          items = [ response[:item] ] unless response[:item].is_a? Array
+
+          items.each do |term|
+            term_key = term[:key].to_s
+            term_value = term[:value].to_s
+            parent = self.find_in_graph(term_key) || OLS::Term.new(term_key,term_value,@graph)
             self.add_parent(parent)
           end
         end
