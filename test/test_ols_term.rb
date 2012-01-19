@@ -486,30 +486,6 @@ class OLSTermTest < Test::Unit::TestCase
         OLS.unstub(:request)
       end
 
-      should 'allow serialization using YAML' do
-        @emap_term.focus_graph!
-
-        OLS.stubs(:request).returns(nil)
-
-        require 'yaml'
-
-        # check the stubbing is okay...
-        assert_raise(ArgumentError) { foo = OLS.find_by_id('EMAP:3003') }
-
-        # now get on with testing yaml...
-        data = @emap_term.to_yaml
-        copy = YAML.load(data)
-
-        assert_equal @emap_term.term_id, copy.term_id
-        assert_equal @emap_term.term_name, copy.term_name
-        assert_equal @emap_term.size, copy.size
-        assert_equal @emap_term.root.term_id, copy.root.term_id
-        assert_equal @emap_term.all_parent_ids, copy.all_parent_ids
-        assert_equal @emap_term.all_parent_names, copy.all_parent_names
-
-        OLS.unstub(:request)
-      end
-
       should 'allow users to write image files showing the graph structure' do
         @mp_term.focus_graph!
         assert_silent do
