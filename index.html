@@ -1,0 +1,232 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>OLS by dazoakley</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>OLS</h1>
+<p>Ruby client for the EBI's Ontology Lookup Service</p>
+        <p class="view"><a href="https://github.com/dazoakley/ols">View the Project on GitHub <small>dazoakley/ols</small></a></p>
+        <ul>
+          <li><a href="https://github.com/dazoakley/ols/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/dazoakley/ols/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/dazoakley/ols">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>OLS</h1>
+
+<p>OLS provides a simple interface to the EBI's Ontology Lookup Service (<a href="http://www.ebi.ac.uk/ontology-lookup/">http://www.ebi.ac.uk/ontology-lookup/</a>). It provides an easy lookup of ontology terms and automagically builds up ontology graphs.</p>
+
+<h2>Install</h2>
+
+<div class="highlight">
+<pre>gem install ols
+</pre>
+</div>
+
+
+<h2>Basic Usage</h2>
+
+<p>Include the module in your code:</p>
+
+<div class="highlight">
+<pre><span class="nb">require</span> <span class="s1">'rubygems'</span>
+<span class="nb">require</span> <span class="s1">'ols'</span>
+</pre>
+</div>
+
+
+<p>Then, to lookup an ontology term:</p>
+
+<div class="highlight">
+<pre><span class="n">ont</span> <span class="o">=</span> <span class="no">OLS</span><span class="o">.</span><span class="n">find_by_id</span><span class="p">(</span><span class="s1">'EMAP:3018'</span><span class="p">)</span>
+</pre>
+</div>
+
+
+<p>This will create a simple tree object for the EMAP term EMAP:3018</p>
+
+<div class="highlight">
+<pre><span class="n">ont</span><span class="o">.</span><span class="n">term_id</span>             <span class="c1"># =&gt; "EMAP:3018"</span>
+<span class="n">ont</span><span class="o">.</span><span class="n">term_name</span>           <span class="c1"># =&gt; "TS18,nose"</span>
+</pre>
+</div>
+
+
+<p>Find out about your ontology term</p>
+
+<div class="highlight">
+<pre><span class="n">ont</span><span class="o">.</span><span class="n">is_root?</span>            <span class="c1"># =&gt; false</span>
+<span class="n">ont</span><span class="o">.</span><span class="n">is_leaf?</span>            <span class="c1"># =&gt; false</span>
+<span class="n">ont</span><span class="o">.</span><span class="n">to_s</span>                <span class="c1"># =&gt; "EMAP:3018 - TS18,nose"</span>
+</pre>
+</div>
+
+
+<p>The graph for the term is built up (parents) and down (children) as it is requested:</p>
+
+<div class="highlight">
+<pre><span class="n">ont</span><span class="o">.</span><span class="n">parents</span>             <span class="c1"># =&gt; Array of all parent terms objects</span>
+<span class="n">ont</span><span class="o">.</span><span class="n">children</span>            <span class="c1"># =&gt; Array of all direct child term objects</span>
+</pre>
+</div>
+
+
+<p>Alternatively, if you want to force load the graph (around this term):</p>
+
+<div class="highlight">
+<pre><span class="n">ont</span><span class="o">.</span><span class="n">focus_graph!</span>        <span class="c1"># =&gt; Will load all parents and children into the graph</span>
+<span class="n">ont</span><span class="o">.</span><span class="n">size</span>                <span class="c1"># =&gt; 19</span>
+</pre>
+</div>
+
+
+<p>Find out more about your graph:</p>
+
+<div class="highlight">
+<pre><span class="n">ont</span><span class="o">.</span><span class="n">root</span>                <span class="c1"># =&gt; Gives you the root node - in this case: "EMAP:0"</span>
+<span class="n">ont</span><span class="o">.</span><span class="n">all_parent_ids</span>      <span class="c1"># =&gt; An array of all parent ontology terms</span>
+<span class="n">ont</span><span class="o">.</span><span class="n">all_parent_names</span>    <span class="c1"># =&gt; An array of all parent ontology term names</span>
+<span class="n">ont</span><span class="o">.</span><span class="n">all_child_ids</span>       <span class="c1"># =&gt; An array of all child ontology terms</span>
+<span class="n">ont</span><span class="o">.</span><span class="n">all_child_names</span>     <span class="c1"># =&gt; An array of all child ontology term names</span>
+</pre>
+</div>
+
+
+<p>Visualise your graph (useful for exploring):</p>
+
+<div class="highlight">
+<pre><span class="n">ont</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">print_graph</span>
+
+<span class="c1"># Gives the following:</span>
+<span class="c1">#</span>
+<span class="c1"># * EMAP:0</span>
+<span class="c1">#     |---+ EMAP:2636</span>
+<span class="c1">#         |---+ EMAP:2822</span>
+<span class="c1">#             |---+ EMAP:2987</span>
+<span class="c1">#                 |---+ EMAP:3018</span>
+<span class="c1">#                     |---+ EMAP:3022</span>
+<span class="c1">#                         |---+ EMAP:3023</span>
+<span class="c1">#                             |---+ EMAP:3024</span>
+<span class="c1">#                                 |---&gt; EMAP:3025</span>
+<span class="c1">#                                 |---&gt; EMAP:3026</span>
+<span class="c1">#                             |---+ EMAP:3027</span>
+<span class="c1">#                                 |---&gt; EMAP:3029</span>
+<span class="c1">#                                 |---&gt; EMAP:3028</span>
+<span class="c1">#                             |---+ EMAP:3030</span>
+<span class="c1">#                                 |---&gt; EMAP:3031</span>
+<span class="c1">#                                 |---&gt; EMAP:3032</span>
+<span class="c1">#                     |---&gt; EMAP:3019</span>
+<span class="c1">#                     |---+ EMAP:3020</span>
+<span class="c1">#                         |---&gt; EMAP:3021</span>
+<span class="c1">#</span>
+</pre>
+</div>
+
+
+<p>More documentation can be found on the <a href="http://rdoc.info/gems/ols/frames">OLS module and OLS::Term rdoc pages</a>.</p>
+
+<h2>Advanced Usage</h2>
+
+<p>More to come...</p>
+
+<h2>Caching</h2>
+
+<p>If you regularly hit up one or more ontology with lots of queries it might be in
+your interest to store a local on-disk copy of the entire ontology graph.  This
+will protect you against network problems and will stop you hitting OLS with many
+repeated service calls.</p>
+
+<p>The OLS gem has a basic caching layer built into it that allows you to store the
+entire graph for your most used ontologies on disk.  To setup/invoke the cache, do
+the following:</p>
+
+<div class="highlight">
+<pre><span class="no">OLS</span><span class="o">.</span><span class="n">setup_cache</span><span class="p">({</span> <span class="ss">:directory</span> <span class="o">=&gt;</span> <span class="s1">'/tmp/ols_cache'</span> <span class="p">})</span>
+</pre>
+</div>
+
+
+<p>This will create a cache directory (/tmp/ols_cache) if it does not exist, or read in
+configuration files etc if it is an already existing OLS cache directory. If you do not
+pass in a configuration hash it will use the current working directory by default.</p>
+
+<p>Now, to add an ontology to the cache, you do the following:</p>
+
+<div class="highlight">
+<pre><span class="no">OLS</span><span class="o">.</span><span class="n">add_ontology_to_cache</span><span class="p">(</span><span class="s2">"EMAP"</span><span class="p">)</span>
+</pre>
+</div>
+
+
+<p>This will add the entire EMAP ontology graph to the cache (this will take a while) - now
+all calls for EMAP terms will go via the cache, all other queries will still call the OLS web
+services.  (There is no dynamic cache build-up over time).</p>
+
+<p>To remove an ontology graph from the cache:</p>
+
+<div class="highlight">
+<pre><span class="no">OLS</span><span class="o">.</span><span class="n">remove_ontology_from_cache</span><span class="p">(</span><span class="s2">"EMAP"</span><span class="p">)</span>
+</pre>
+</div>
+
+
+<p>Different cache back-ends and other features will be built into future releases.</p>
+
+<h2>Meta</h2>
+
+<p>Written by Darren Oakley (daz dot oakley at gmail dot com)</p>
+
+<p><a href="http://dazoakley.github.com/ols">http://dazoakley.github.com/ols</a></p>
+
+<p><a href="http://github.com/dazoakley/ols">http://github.com/dazoakley/ols</a></p>
+
+<p><a href="http://rdoc.info/gems/ols/frames">http://rdoc.info/gems/ols/frames</a></p>
+
+<h2>License</h2>
+
+<p>(The MIT License)</p>
+
+<p>Copyright (c) 2011 Darren Oakley</p>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+'Software'), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/dazoakley">dazoakley</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><!--<![endif]-->
+  </body>
+</html>
